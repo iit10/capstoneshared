@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapCal App Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 25px;
+            padding: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-bar {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .top-bar {
+            background: #fff;
+            padding: 16px 0;
+            margin-bottom: 16px;
+        }
+        
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+        
+        .calories-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .progress-circle {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: conic-gradient(#4A90E2 0deg 234deg, #E5E5E5 234deg 360deg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-circle::before {
+            content: '';
+            width: 68px;
+            height: 68px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .calories-info {
+            flex: 1;
+        }
+        
+        .calories-text {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .blue { background: #4A90E2; }
+        .gray { background: #E5E5E5; }
+        
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #4A90E2;
+            border: 2px solid #4A90E2;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .bottom-nav {
+            height: 80px;
+            background: #fff;
+            border-top: 1px solid #E5E5E5;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .nav-item.active {
+            background: #E3F2FD;
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            background: #666;
+            border-radius: 4px;
+        }
+        
+        .nav-item.active .nav-icon {
+            background: #4A90E2;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #4A90E2;
+            font-weight: 600;
+        }
+        
+        .screen-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 16px;
+            z-index: 1000;
+        }
+        
+        .screen-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .screen-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .screen-btn.active {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .login-screen {
+            padding: 40px 20px;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .login-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .login-subtitle {
+            color: #666;
+            margin-bottom: 32px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            margin: 8px 0;
+            border: 2px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: #4A90E2;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 16px 0;
+            cursor: pointer;
+        }
+        
+        .text-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-selector">
+        <h3 style="margin-bottom: 12px; font-size: 14px;">App Screens</h3>
+        <button class="screen-btn" onclick="showScreen('login')">Login</button>
+        <button class="screen-btn active" onclick="showScreen('dashboard')">Dashboard</button>
+        <button class="screen-btn" onclick="showScreen('scan')">Scan</button>
+        <button class="screen-btn" onclick="showScreen('manual')">Manual Entry</button>
+        <button class="screen-btn" onclick="showScreen('progress')">Progress</button>
+    </div>
+
+    <div class="phone-frame">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>🔋 100%</span>
+            </div>
+            
+            <!-- Login Screen -->
+            <div id="login-screen" class="login-screen hidden">
+                <div></div>
+                <div>
+                    <h1 class="login-title">SnapCal</h1>
+                    <p class="login-subtitle">Log in to continue</p>
+                    <input type="email" class="input-field" placeholder="Email">
+                    <input type="password" class="input-field" placeholder="Password">
+                    <button class="login-btn" onclick="showScreen('dashboard')">Login</button>
+                    <button class="text-btn">Sign Up</button>
+                    <button class="text-btn">Forgot password?</button>
+                </div>
+                <div></div>
+            </div>
+            
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="app-content">
+                <div class="top-bar">
+                    <h1>Dashboard</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Calories (in vs out)</div>
+                    <div class="calories-section">
+                        <div class="progress-circle"></div>
+                        <div class="calories-info">
+                            <div class="calories-text">In: 1,650 kcal   Out: 700 kcal</div>
+                            <div class="calories-text" style="font-weight: 600;">Balance: –950 kcal</div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-color blue"></div>
+                                    <span>Consumed</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color gray"></div>
+                                    <span>Remaining</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="card-title">Steps</div>
+                        <div class="stat-value">6,842</div>
+                        <div class="stat-label">Goal: 8,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="card-title">Workouts</div>
+                        <div class="stat-value">Cycling 45 min</div>
+                        <div class="stat-label">Burned: 520 kcal</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Quick Actions</div>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="showScreen('scan')">Scan Label</button>
+                        <button class="btn btn-outline" onclick="showScreen('manual')">Log Meal</button>
+                        <button class="btn btn-outline" onclick="showScreen('progress')">Progress</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scan Screen -->
+            <div id="scan-screen" class="app-content hidden">
+                <div class="top-bar">
+                    <h1>Scan Product / Receipt</h1>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 100%; height: 220px; background: #0F172A; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                        <div style="width: 90%; height: 75%; background: #1F2937; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #CBD5E1; text-align: center; line-height: 1.5;">
+                            Align label inside the frame<br>Good lighting improves accuracy
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 12px 24px;">📷 Capture</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Detected Item</div>
+                    <div style="font-weight: 600; margin-bottom: 12px;">Greek Yogurt 2% (170 g)</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Calories</div>
+                            <div style="font-weight: 600;">130 kcal</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Protein</div>
+                            <div style="font-weight: 600;">12 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Carbs</div>
+                            <div style="font-weight: 600;">5 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Fat</div>
+                            <div style="font-weight: 600;">4 g</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-outline">✏️ Edit</button>
+                        <button class="btn btn-primary">✓ Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manual Entry Screen -->
+            <div id="manual-screen" class="app-content hidden">
+                <div class="top-bar">
+                    <h1>Add Meal Manually</h1>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="text" class="input-field" placeholder="Food name">
+                    <input type="text" class="input-field" placeholder="Portion size (e.g., 100 g)">
+                    <input type="number" class="input-field" placeholder="Calories (kcal)">
+                    <div style="display: flex; gap: 12px;">
+                        <input type="number" class="input-field" placeholder="Protein (g)" style="flex: 1;">
+                        <input type="number" class="input-field" placeholder="Carbs (g)" style="flex: 1;">
+                        <input type="number" class="input-field" placeholder="Fat (g)" style="flex: 1;">
+                    </div>
+                    <input type="text" class="input-field" value="Breakfast" readonly style="background: #f5f5f5;">
+                    <button class="login-btn">Save Meal</button>
+                </div>
+            </div>
+            
+            <!-- Progress Screen -->
+            <div id="progress-screen" class="app-content hidden">
+                <div class="top-bar">
+                    <h1>Progress</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Weight Trend (last 4 weeks)</div>
+                    <div style="height: 120px; background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1976D2; font-weight: 600;">
+                        📈 Weight: 165 lbs → 162 lbs
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Calories In vs Out (weekly)</div>
+                    <div style="display: flex; justify-content: space-between; align-items: end; height: 100px; padding: 16px 0;">
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 60px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">M</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 70px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">T</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 55px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">W</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 65px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">T</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 50px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">F</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 58px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">S</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 62px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">S</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="showScreen('dashboard')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Dashboard</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('manual')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Manual</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('progress')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Progress</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('scan')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Garmin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenName, clickedElement = null) {
+            // Hide all screens
+            const screens = ['login', 'dashboard', 'scan', 'manual', 'progress'];
+            screens.forEach(screen => {
+                const element = document.getElementById(screen + '-screen');
+                if (element) {
+                    element.classList.add('hidden');
+                }
+            });
+            
+            // Show selected screen
+            const targetScreen = document.getElementById(screenName + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.remove('hidden');
+            }
+            
+            // Update screen selector button states
+            document.querySelectorAll('.screen-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Set the clicked screen button as active
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Find the button for this screen
+                const buttons = document.querySelectorAll('.screen-btn');
+                buttons.forEach(btn => {
+                    if (btn.textContent.toLowerCase().includes(screenName.toLowerCase()) || 
+                        (screenName === 'manual' && btn.textContent.includes('Manual Entry'))) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            // Update bottom nav states
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
+            
+            // Set appropriate nav item as active
+            const navItems = document.querySelectorAll('.nav-item');
+            if (screenName === 'dashboard' && navItems[0]) navItems[0].classList.add('active');
+            if (screenName === 'manual' && navItems[1]) navItems[1].classList.add('active');
+            if (screenName === 'progress' && navItems[2]) navItems[2].classList.add('active');
+            if (screenName === 'scan' && navItems[3]) navItems[3].classList.add('active');
+            
+            console.log('Switched to screen:', screenName);
+        }
+        
+        // Add event listeners when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize with dashboard
+            showScreen('dashboard');
+            
+            // Add click handlers to screen buttons
+            document.querySelectorAll('.screen-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const text = this.textContent.toLowerCase();
+                    let screenName = '';
+                    
+                    if (text.includes('login')) screenName = 'login';
+                    else if (text.includes('dashboard')) screenName = 'dashboard';
+                    else if (text.includes('scan')) screenName = 'scan';
+                    else if (text.includes('manual')) screenName = 'manual';
+                    else if (text.includes('progress')) screenName = 'progress';
+                    
+                    if (screenName) {
+                        showScreen(screenName, this);
+                    }
+                });
+            });
+            
+            // Add click handlers to nav items
+            document.querySelectorAll('.nav-item').forEach((navItem, index) => {
+                navItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    let screenName = '';
+                    
+                    switch(index) {
+                        case 0: screenName = 'dashboard'; break;
+                        case 1: screenName = 'manual'; break;
+                        case 2: screenName = 'progress'; break;
+                        case 3: screenName = 'scan'; break;
+                    }
+                    
+                    if (screenName) {
+                        showScreen(screenName);
+                    }
+                });
+            });
+            
+            // Add click handlers to action buttons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const text = this.textContent.toLowerCase();
+                    
+                    if (text.includes('scan')) {
+                        showScreen('scan');
+                    } else if (text.includes('log meal') || text.includes('manual')) {
+                        showScreen('manual');
+                    } else if (text.includes('progress')) {
+                        showScreen('progress');
+                    } else if (text.includes('login')) {
+                        showScreen('dashboard');
+                    }
+                });
+            });
+        });
+        
+        // Keep the old onclick handlers as backup
+        window.showScreen = showScreen;
+    </script>
+</body>
+</html>

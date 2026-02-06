@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SnapCal Test</title>
+    <script>
+        function testFunction() {
+            alert("JavaScript is working! Buttons should be functional now.");
+            console.log("Test successful - JavaScript is executing properly");
+        }
+        
+        function showAlert(message) {
+            alert("Screen would switch to: " + message);
+        }
+        
+        window.onload = function() {
+            console.log("Page loaded successfully with JavaScript enabled");
+        }
+    </script>
+</head>
+<body>
+    <h1>SnapCal JavaScript Test</h1>
+    <button onclick="testFunction()">Test JavaScript</button>
+    <br><br>
+    <button onclick="showAlert('Dashboard')">Test Dashboard</button>
+    <button onclick="showAlert('Scan')">Test Scan</button>
+    <button onclick="showAlert('Manual Entry')">Test Manual Entry</button>
+    <button onclick="showAlert('Progress')">Test Progress</button>
+</body>
+</html>

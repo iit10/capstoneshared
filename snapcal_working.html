@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapCal App Preview - Working</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 25px;
+            padding: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-bar {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .screen-content {
+            display: none !important;
+        }
+        
+        .screen-content.active {
+            display: block !important;
+        }
+        
+        .top-bar {
+            background: #fff;
+            padding: 16px 0;
+            margin-bottom: 16px;
+        }
+        
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+        
+        .calories-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .progress-circle {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: conic-gradient(#4A90E2 0deg 234deg, #E5E5E5 234deg 360deg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-circle::before {
+            content: '';
+            width: 68px;
+            height: 68px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .calories-info {
+            flex: 1;
+        }
+        
+        .calories-text {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .blue { background: #4A90E2; }
+        .gray { background: #E5E5E5; }
+        
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #4A90E2;
+            border: 2px solid #4A90E2;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+        
+        .bottom-nav {
+            height: 80px;
+            background: #fff;
+            border-top: 1px solid #E5E5E5;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .nav-item.active {
+            background: #E3F2FD;
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            background: #666;
+            border-radius: 4px;
+        }
+        
+        .nav-item.active .nav-icon {
+            background: #4A90E2;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #4A90E2;
+            font-weight: 600;
+        }
+        
+        .screen-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 16px;
+            z-index: 1000;
+        }
+        
+        .screen-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .screen-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .screen-btn.active {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .login-screen {
+            padding: 40px 20px;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .login-subtitle {
+            color: #666;
+            margin-bottom: 32px;
+        }
+        
+        .input-field {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px;
+            margin: 8px 0;
+            border: 2px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: #4A90E2;
+        }
+        
+        .login-btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 16px 0;
+            cursor: pointer;
+        }
+        
+        .text-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+        
+        /* Menu System Styles */
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #4A90E2;
+            background: transparent;
+            color: #4A90E2;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .filter-btn.active {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .meal-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .meal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .meal-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        .meal-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .meal-details {
+            flex: 1;
+        }
+        
+        .meal-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        
+        .meal-category {
+            font-size: 12px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .meal-calories {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4A90E2;
+        }
+        
+        .add-meal-btn {
+            padding: 8px 16px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .meal-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .ingredient-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+        
+        .recipe-steps {
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        
+        .recipe-step {
+            margin-bottom: 8px;
+            padding-left: 16px;
+            position: relative;
+        }
+        
+        .recipe-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #4A90E2;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .recipe-steps {
+            counter-reset: step-counter;
+        }
+        
+        .frequency-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .frequency-input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .planned-meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .planned-meal-info {
+            flex: 1;
+        }
+        
+        .planned-meal-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .planned-meal-details {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .remove-meal-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .shopping-category {
+            margin-bottom: 16px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .item-name {
+            font-weight: 500;
+        }
+        
+        .item-quantity {
+            font-size: 14px;
+            color: #666;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-selector">
+        <h3 style="margin-bottom: 12px; font-size: 14px;">📱 App Screens</h3>
+        <button class="screen-btn" data-screen="login">🔐 Login</button>
+        <button class="screen-btn active" data-screen="dashboard">🏠 Dashboard</button>
+        <button class="screen-btn" data-screen="scan">📸 Scan</button>
+        <button class="screen-btn" data-screen="menu">🍽️ Menu</button>
+        <button class="screen-btn" data-screen="manual">✏️ Manual Entry</button>
+        <button class="screen-btn" data-screen="progress">📊 Progress</button>
+        <button class="screen-btn" data-screen="planner">📅 Meal Plan</button>
+        <button class="screen-btn" data-screen="shopping">🛒 Shopping List</button>
+    </div>
+
+    <div class="phone-frame">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>🔋 100%</span>
+            </div>
+            
+            <!-- Login Screen -->
+            <div id="login" class="screen-content login-screen">
+                <div>
+                    <h1 class="login-title">SnapCal</h1>
+                    <p class="login-subtitle">Log in to continue</p>
+                    <input type="email" class="input-field" placeholder="Email">
+                    <input type="password" class="input-field" placeholder="Password">
+                    <button class="login-btn" onclick="switchScreen('dashboard')">Login</button>
+                    <button class="text-btn">Sign Up</button>
+                    <button class="text-btn">Forgot password?</button>
+                </div>
+            </div>
+            
+            <!-- Dashboard Screen -->
+            <div id="dashboard" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>Dashboard</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Calories (in vs out)</div>
+                    <div class="calories-section">
+                        <div class="progress-circle"></div>
+                        <div class="calories-info">
+                            <div class="calories-text">In: 1,650 kcal   Out: 700 kcal</div>
+                            <div class="calories-text" style="font-weight: 600;">Balance: –950 kcal</div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-color blue"></div>
+                                    <span>Consumed</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color gray"></div>
+                                    <span>Remaining</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="card-title">Steps</div>
+                        <div class="stat-value">6,842</div>
+                        <div class="stat-label">Goal: 8,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="card-title">Workouts</div>
+                        <div class="stat-value">Cycling 45 min</div>
+                        <div class="stat-label">Burned: 520 kcal</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Quick Actions</div>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="switchScreen('scan')">📷 Scan Label</button>
+                        <button class="btn btn-outline" onclick="switchScreen('menu')">🍽️ Browse Menu</button>
+                        <button class="btn btn-outline" onclick="switchScreen('progress')">📊 Progress</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scan Screen -->
+            <div id="scan" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📸 Scan Product / Receipt</h1>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 100%; height: 220px; background: #0F172A; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                        <div style="width: 90%; height: 75%; background: #1F2937; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #CBD5E1; text-align: center; line-height: 1.5;">
+                            📱 Align label inside the frame<br>💡 Good lighting improves accuracy
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 12px 24px;">📷 Capture Photo</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">🥛 Detected Item</div>
+                    <div style="font-weight: 600; margin-bottom: 12px;">Greek Yogurt 2% (170 g)</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Calories</div>
+                            <div style="font-weight: 600;">130 kcal</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Protein</div>
+                            <div style="font-weight: 600;">12 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Carbs</div>
+                            <div style="font-weight: 600;">5 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Fat</div>
+                            <div style="font-weight: 600;">4 g</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-outline">✏️ Edit</button>
+                        <button class="btn btn-primary" onclick="switchScreen('dashboard')">✓ Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manual Entry Screen -->
+            <div id="manual" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>✏️ Add Meal Manually</h1>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="text" class="input-field" placeholder="🍎 Food name">
+                    <input type="text" class="input-field" placeholder="⚖️ Portion size (e.g., 100 g)">
+                    <input type="number" class="input-field" placeholder="🔥 Calories (kcal)">
+                    <div style="display: flex; gap: 12px;">
+                        <input type="number" class="input-field" placeholder="💪 Protein (g)" style="flex: 1;">
+                        <input type="number" class="input-field" placeholder="🍞 Carbs (g)" style="flex: 1;">
+                        <input type="number" class="input-field" placeholder="🥑 Fat (g)" style="flex: 1;">
+                    </div>
+                    <input type="text" class="input-field" value="🌅 Breakfast" readonly style="background: #f5f5f5;">
+                    <button class="btn btn-primary" onclick="switchScreen('dashboard')" style="width: 100%; padding: 16px;">💾 Save Meal</button>
+                </div>
+            </div>
+            
+            <!-- Progress Screen -->
+            <div id="progress" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📊 Progress</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">📈 Weight Trend (last 4 weeks)</div>
+                    <div style="height: 120px; background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1976D2; font-weight: 600;">
+                        📉 Weight: 165 lbs → 162 lbs (-3 lbs)
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">📊 Calories In vs Out (weekly)</div>
+                    <div style="display: flex; justify-content: space-between; align-items: end; height: 100px; padding: 16px 0;">
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 60px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">M</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 70px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">T</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 55px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">W</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 65px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">T</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 50px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">F</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 58px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">S</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 20px; height: 62px; background: #60A5FA; margin-bottom: 4px; border-radius: 4px;"></div>
+                            <div style="font-size: 12px;">S</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">🎯 Weekly Summary</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 18px; font-weight: bold; color: #28a745;">-3 lbs</div>
+                            <div style="font-size: 12px; color: #666;">Weight Lost</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 18px; font-weight: bold; color: #007bff;">12,500</div>
+                            <div style="font-size: 12px; color: #666;">Avg Steps</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Menu Screen -->
+            <div id="menu" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>🍽️ Healthy Menu</h1>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding: 4px;">
+                        <button class="filter-btn active" onclick="filterMeals('all')">All</button>
+                        <button class="filter-btn" onclick="filterMeals('breakfast')">🌅 Breakfast</button>
+                        <button class="filter-btn" onclick="filterMeals('lunch')">🌞 Lunch</button>
+                        <button class="filter-btn" onclick="filterMeals('dinner')">🌙 Dinner</button>
+                        <button class="filter-btn" onclick="filterMeals('snack')">🥜 Snacks</button>
+                    </div>
+                </div>
+                
+                <div id="meals-grid" style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                    <!-- Meals will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Meal Planner Screen -->
+            <div id="planner" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📅 Weekly Meal Plan</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">📊 Weekly Overview</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div style="text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #4A90E2;" id="planned-calories">0</div>
+                            <div style="font-size: 14px; color: #666;">Weekly Calories</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: #f0fff0; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #28a745;" id="planned-meals">0</div>
+                            <div style="font-size: 14px; color: #666;">Planned Meals</div>
+                        </div>
+                    </div>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="clearMealPlan()">🗑️ Clear Plan</button>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: transparent; color: #4A90E2; border: 2px solid #4A90E2; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="loadDemoMealPlan()">✨ Load Demo Plan</button>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="loadDemoAndGenerateList()">⚡ Demo + Shopping List</button>
+                    <button style="width: 100%; padding: 12px; background: transparent; color: #4A90E2; border: 2px solid #4A90E2; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="generateShoppingList()">🛒 Generate Shopping List</button>
+                </div>
+                
+                <div id="meal-plan-list">
+                    <div class="card">
+                        <div class="card-title">Your Weekly Meal Plan</div>
+                        <div id="planned-meals-list">
+                            <p style="text-align: center; color: #666; padding: 20px;">No meals planned yet. Browse the menu to add meals!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shopping List Screen -->
+            <div id="shopping" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>🛒 Shopping List</h1>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div class="card-title">📝 Your Shopping List</div>
+                        <button class="btn btn-outline" onclick="clearShoppingList()" style="flex: none; padding: 8px 16px;">Clear All</button>
+                    </div>
+                    <div id="shopping-categories">
+                        <!-- Shopping list will be populated by JavaScript -->
+                        <p style="text-align: center; color: #666; padding: 20px;" id="empty-shopping-msg">Generate your shopping list from your meal plan!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="switchScreen('dashboard')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Dashboard</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('menu')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Menu</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('planner')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Plan</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('shopping')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Shopping</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('progress')">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">Progress</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple, guaranteed-to-work screen switching function
+        function switchScreen(screenName) {
+            console.log('Switching to:', screenName);
+            
+            // Hide all screens
+            const allScreens = document.querySelectorAll('.screen-content');
+            allScreens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show target screen
+            const targetScreen = document.getElementById(screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                console.log('Successfully switched to:', screenName);
+                
+                // Initialize screen-specific content
+                if (screenName === 'menu') {
+                    displayMeals(MEALS_DATABASE);
+                } else if (screenName === 'planner') {
+                    updateMealPlanDisplay();
+                } else if (screenName === 'shopping') {
+                    updateShoppingListDisplay();
+                }
+                
+            } else {
+                console.error('Screen not found:', screenName);
+            }
+            
+            // Update screen selector buttons
+            const allButtons = document.querySelectorAll('.screen-btn');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-screen') === screenName) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update bottom navigation
+            const allNavItems = document.querySelectorAll('.nav-item');
+            allNavItems.forEach(nav => nav.classList.remove('active'));
+            
+            // Set correct nav item as active
+            const navItems = document.querySelectorAll('.nav-item');
+            if (screenName === 'dashboard' && navItems[0]) navItems[0].classList.add('active');
+            if (screenName === 'menu' && navItems[1]) navItems[1].classList.add('active');
+            if (screenName === 'planner' && navItems[2]) navItems[2].classList.add('active');
+            if (screenName === 'shopping' && navItems[3]) navItems[3].classList.add('active');
+            if (screenName === 'progress' && navItems[4]) navItems[4].classList.add('active');
+            if (screenName === 'scan' && navItems[5]) navItems[5].classList.add('active');
+            if (screenName === 'manual' && navItems[6]) navItems[6].classList.add('active');
+        }
+        
+        // Set up event listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded - setting up SnapCal app');
+            
+            // Screen selector buttons
+            const screenButtons = document.querySelectorAll('.screen-btn');
+            screenButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const screen = this.getAttribute('data-screen');
+                    console.log('Button clicked for screen:', screen);
+                    switchScreen(screen);
+                });
+            });
+            
+            // Initialize meal system
+            initializeMealSystem();
+            
+            // Force start with dashboard and make sure it's visible
+            setTimeout(() => {
+                console.log('Force switching to dashboard');
+                switchScreen('dashboard');
+            }, 100);
+            
+            console.log('SnapCal app ready!');
+        });
+        
+        // Meal Database - 25 Healthy Meals
+        const MEALS_DATABASE = [
+            // BREAKFAST (7 meals)
+            {
+                id: 1, name: "Power Breakfast Bowl", category: "breakfast", calories: 420, icon: "🍳",
+                ingredients: [
+                    {name: "Large eggs", quantity: 3, unit: "pieces", category: "dairy"},
+                    {name: "Turkey bacon", quantity: 4, unit: "strips", category: "meat"},
+                    {name: "Medium potatoes", quantity: 2, unit: "pieces", category: "vegetables"},
+                    {name: "Cheddar cheese", quantity: 50, unit: "g", category: "dairy"},
+                    {name: "Olive oil", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Heat oil in pan", "Cook diced potatoes until golden", "Add beaten eggs and scramble", "Cook bacon separately", "Top with cheese and bacon"]
+            },
+            {
+                id: 2, name: "Overnight Oats Berry Boost", category: "breakfast", calories: 350, icon: "🥣",
+                ingredients: [
+                    {name: "Rolled oats", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Greek yogurt", quantity: 150, unit: "g", category: "dairy"},
+                    {name: "Mixed berries", quantity: 100, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Chia seeds", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Mix oats with yogurt", "Add honey and chia seeds", "Layer with berries", "Refrigerate overnight", "Enjoy cold in the morning"]
+            },
+            {
+                id: 3, name: "Avocado Toast Deluxe", category: "breakfast", calories: 380, icon: "🥑",
+                ingredients: [
+                    {name: "Whole grain bread", quantity: 2, unit: "slices", category: "pantry"},
+                    {name: "Ripe avocado", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Cherry tomatoes", quantity: 6, unit: "pieces", category: "vegetables"},
+                    {name: "Feta cheese", quantity: 30, unit: "g", category: "dairy"},
+                    {name: "Lemon juice", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Toast bread until golden", "Mash avocado with lemon", "Spread on toast", "Top with tomatoes and feta", "Season with salt and pepper"]
+            },
+            {
+                id: 4, name: "Protein Smoothie Bowl", category: "breakfast", calories: 320, icon: "🥤",
+                ingredients: [
+                    {name: "Protein powder", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Banana", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Spinach", quantity: 50, unit: "g", category: "vegetables"},
+                    {name: "Almond milk", quantity: 250, unit: "ml", category: "dairy"},
+                    {name: "Granola", quantity: 30, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Blend protein powder with milk", "Add banana and spinach", "Blend until smooth", "Pour into bowl", "Top with granola"]
+            },
+            {
+                id: 5, name: "Veggie Scramble Wrap", category: "breakfast", calories: 360, icon: "🌯",
+                ingredients: [
+                    {name: "Large eggs", quantity: 2, unit: "pieces", category: "dairy"},
+                    {name: "Whole wheat tortilla", quantity: 1, unit: "piece", category: "pantry"},
+                    {name: "Bell pepper", quantity: 0.5, unit: "piece", category: "vegetables"},
+                    {name: "Mushrooms", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Spinach", quantity: 50, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Sauté vegetables until tender", "Beat and scramble eggs", "Combine eggs with vegetables", "Warm tortilla", "Wrap filling in tortilla"]
+            },
+            {
+                id: 6, name: "Quinoa Breakfast Bowl", category: "breakfast", calories: 390, icon: "🍲",
+                ingredients: [
+                    {name: "Quinoa", quantity: 60, unit: "g", category: "pantry"},
+                    {name: "Almond milk", quantity: 200, unit: "ml", category: "dairy"},
+                    {name: "Blueberries", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Almonds", quantity: 20, unit: "g", category: "pantry"},
+                    {name: "Cinnamon", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Cook quinoa in almond milk", "Add cinnamon while cooking", "Top with fresh blueberries", "Sprinkle with almonds", "Serve warm"]
+            },
+            {
+                id: 7, name: "Greek Yogurt Parfait", category: "breakfast", calories: 300, icon: "🥜",
+                ingredients: [
+                    {name: "Greek yogurt", quantity: 200, unit: "g", category: "dairy"},
+                    {name: "Granola", quantity: 40, unit: "g", category: "pantry"},
+                    {name: "Strawberries", quantity: 100, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 1, unit: "tbsp", category: "pantry"},
+                    {name: "Walnuts", quantity: 15, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Layer yogurt in glass", "Add granola layer", "Add strawberry layer", "Repeat layers", "Top with honey and walnuts"]
+            },
+            
+            // LUNCH (6 meals)
+            {
+                id: 8, name: "Grilled Chicken Caesar", category: "lunch", calories: 450, icon: "🥗",
+                ingredients: [
+                    {name: "Chicken breast", quantity: 150, unit: "g", category: "meat"},
+                    {name: "Romaine lettuce", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Parmesan cheese", quantity: 30, unit: "g", category: "dairy"},
+                    {name: "Caesar dressing", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Croutons", quantity: 20, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Season and grill chicken", "Chop romaine lettuce", "Slice grilled chicken", "Toss lettuce with dressing", "Top with chicken, cheese, croutons"]
+            },
+            {
+                id: 9, name: "Turkey Club Wrap", category: "lunch", calories: 420, icon: "🥙",
+                ingredients: [
+                    {name: "Turkey breast", quantity: 120, unit: "g", category: "meat"},
+                    {name: "Whole wheat wrap", quantity: 1, unit: "piece", category: "pantry"},
+                    {name: "Avocado", quantity: 0.5, unit: "piece", category: "fruits"},
+                    {name: "Tomato", quantity: 1, unit: "piece", category: "vegetables"},
+                    {name: "Lettuce", quantity: 50, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Lay out wrap", "Spread mashed avocado", "Add turkey slices", "Add tomato and lettuce", "Roll wrap tightly"]
+            },
+            {
+                id: 10, name: "Quinoa Buddha Bowl", category: "lunch", calories: 480, icon: "🍜",
+                ingredients: [
+                    {name: "Quinoa", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Chickpeas", quantity: 150, unit: "g", category: "pantry"},
+                    {name: "Sweet potato", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Kale", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Tahini", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Cook quinoa according to package", "Roast sweet potato cubes", "Massage kale with oil", "Combine all ingredients", "Drizzle with tahini dressing"]
+            },
+            {
+                id: 11, name: "Salmon Poke Bowl", category: "lunch", calories: 520, icon: "🍣",
+                ingredients: [
+                    {name: "Fresh salmon", quantity: 150, unit: "g", category: "seafood"},
+                    {name: "Sushi rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Edamame", quantity: 80, unit: "g", category: "vegetables"},
+                    {name: "Soy sauce", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Cook sushi rice", "Dice fresh salmon", "Slice cucumber", "Steam edamame", "Assemble bowl with soy sauce"]
+            },
+            {
+                id: 12, name: "Mediterranean Bowl", category: "lunch", calories: 460, icon: "🫒",
+                ingredients: [
+                    {name: "Brown rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Grilled chicken", quantity: 120, unit: "g", category: "meat"},
+                    {name: "Feta cheese", quantity: 50, unit: "g", category: "dairy"},
+                    {name: "Olives", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Cook brown rice", "Grill and slice chicken", "Dice cucumber", "Combine all ingredients", "Add olive oil and herbs"]
+            },
+            {
+                id: 13, name: "Veggie Lentil Soup", category: "lunch", calories: 380, icon: "🍲",
+                ingredients: [
+                    {name: "Red lentils", quantity: 100, unit: "g", category: "pantry"},
+                    {name: "Vegetable broth", quantity: 500, unit: "ml", category: "pantry"},
+                    {name: "Carrots", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Celery", quantity: 80, unit: "g", category: "vegetables"},
+                    {name: "Onion", quantity: 1, unit: "piece", category: "vegetables"}
+                ],
+                recipe: ["Sauté diced vegetables", "Add lentils and broth", "Simmer for 20 minutes", "Season with herbs", "Serve hot"]
+            },
+            
+            // DINNER (7 meals)
+            {
+                id: 14, name: "Herb Crusted Salmon", category: "dinner", calories: 580, icon: "🐟",
+                ingredients: [
+                    {name: "Salmon fillet", quantity: 200, unit: "g", category: "seafood"},
+                    {name: "Asparagus", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Baby potatoes", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Fresh herbs", quantity: 20, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Season salmon with herbs", "Roast potatoes and asparagus", "Pan-sear salmon", "Cook until flaky", "Serve with roasted vegetables"]
+            },
+            {
+                id: 15, name: "Chicken Stir-fry", category: "dinner", calories: 520, icon: "🍗",
+                ingredients: [
+                    {name: "Chicken breast", quantity: 180, unit: "g", category: "meat"},
+                    {name: "Mixed vegetables", quantity: 250, unit: "g", category: "vegetables"},
+                    {name: "Brown rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Soy sauce", quantity: 3, unit: "tbsp", category: "pantry"},
+                    {name: "Garlic", quantity: 3, unit: "cloves", category: "vegetables"}
+                ],
+                recipe: ["Cook brown rice", "Cut chicken into strips", "Stir-fry chicken until golden", "Add vegetables and garlic", "Finish with soy sauce"]
+            },
+            {
+                id: 16, name: "Lean Beef & Sweet Potato", category: "dinner", calories: 620, icon: "🥩",
+                ingredients: [
+                    {name: "Lean beef", quantity: 180, unit: "g", category: "meat"},
+                    {name: "Sweet potato", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Green beans", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Red wine", quantity: 50, unit: "ml", category: "pantry"},
+                    {name: "Thyme", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Season beef with thyme", "Roast sweet potato wedges", "Sear beef to desired doneness", "Steam green beans", "Deglaze pan with wine"]
+            },
+            {
+                id: 17, name: "Shrimp Zucchini Noodles", category: "dinner", calories: 380, icon: "🍤",
+                ingredients: [
+                    {name: "Large shrimp", quantity: 200, unit: "g", category: "seafood"},
+                    {name: "Zucchini", quantity: 300, unit: "g", category: "vegetables"},
+                    {name: "Cherry tomatoes", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Garlic", quantity: 4, unit: "cloves", category: "vegetables"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Spiralize zucchini into noodles", "Sauté garlic in olive oil", "Add shrimp and cook", "Add tomatoes and zucchini", "Cook until shrimp is pink"]
+            },
+            {
+                id: 18, name: "Turkey Meatballs & Pasta", category: "dinner", calories: 560, icon: "🍝",
+                ingredients: [
+                    {name: "Ground turkey", quantity: 150, unit: "g", category: "meat"},
+                    {name: "Whole wheat pasta", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Marinara sauce", quantity: 150, unit: "ml", category: "pantry"},
+                    {name: "Mozzarella cheese", quantity: 40, unit: "g", category: "dairy"},
+                    {name: "Basil", quantity: 10, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Form turkey into meatballs", "Cook pasta according to package", "Brown meatballs in pan", "Add marinara sauce", "Serve over pasta with cheese"]
+            },
+            {
+                id: 19, name: "Grilled Portobello Stack", category: "dinner", calories: 350, icon: "🍄",
+                ingredients: [
+                    {name: "Portobello mushrooms", quantity: 2, unit: "pieces", category: "vegetables"},
+                    {name: "Eggplant", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Bell peppers", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Goat cheese", quantity: 60, unit: "g", category: "dairy"},
+                    {name: "Balsamic vinegar", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Grill mushrooms and vegetables", "Layer vegetables on mushroom", "Top with goat cheese", "Drizzle with balsamic", "Serve immediately"]
+            },
+            {
+                id: 20, name: "Cod with Roasted Vegetables", category: "dinner", calories: 420, icon: "🐠",
+                ingredients: [
+                    {name: "Cod fillet", quantity: 180, unit: "g", category: "seafood"},
+                    {name: "Brussels sprouts", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Carrots", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Lemon", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Roast vegetables with olive oil", "Season cod with lemon", "Bake cod for 15 minutes", "Check fish is flaky", "Serve with roasted vegetables"]
+            },
+            
+            // SNACKS (5 meals)
+            {
+                id: 21, name: "Apple Almond Butter", category: "snack", calories: 220, icon: "🍎",
+                ingredients: [
+                    {name: "Apple", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Almond butter", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Core and slice apple", "Serve with almond butter for dipping"]
+            },
+            {
+                id: 22, name: "Greek Yogurt Berry Cup", category: "snack", calories: 180, icon: "🫐",
+                ingredients: [
+                    {name: "Greek yogurt", quantity: 150, unit: "g", category: "dairy"},
+                    {name: "Mixed berries", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Add berries to yogurt", "Drizzle with honey", "Mix gently"]
+            },
+            {
+                id: 23, name: "Hummus Veggie Plate", category: "snack", calories: 190, icon: "🥕",
+                ingredients: [
+                    {name: "Hummus", quantity: 60, unit: "g", category: "pantry"},
+                    {name: "Carrots", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Bell pepper", quantity: 80, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Cut vegetables into sticks", "Arrange on plate", "Serve with hummus"]
+            },
+            {
+                id: 24, name: "Protein Energy Balls", category: "snack", calories: 240, icon: "⚽",
+                ingredients: [
+                    {name: "Dates", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Almonds", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Protein powder", quantity: 15, unit: "g", category: "pantry"},
+                    {name: "Coconut flakes", quantity: 15, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Blend dates and almonds", "Add protein powder", "Form into balls", "Roll in coconut", "Chill for 30 minutes"]
+            },
+            {
+                id: 25, name: "Avocado Toast Bites", category: "snack", calories: 160, icon: "🥪",
+                ingredients: [
+                    {name: "Whole grain crackers", quantity: 6, unit: "pieces", category: "pantry"},
+                    {name: "Avocado", quantity: 0.5, unit: "piece", category: "fruits"},
+                    {name: "Cherry tomatoes", quantity: 3, unit: "pieces", category: "vegetables"},
+                    {name: "Sea salt", quantity: 0.5, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Mash avocado with salt", "Spread on crackers", "Top with tomato slices", "Serve immediately"]
+            }
+        ];
+        
+        // Global state
+        let currentMealPlan = [];
+        let currentShoppingList = {};
+        let currentFilter = 'all';
+        
+        // Initialize meal system
+        function initializeMealSystem() {
+            displayMeals(MEALS_DATABASE);
+            updateMealPlanDisplay();
+            updateShoppingListDisplay();
+        }
+        
+        // Display meals based on current filter
+        function displayMeals(meals) {
+            const mealsGrid = document.getElementById('meals-grid');
+            if (!mealsGrid) return;
+            
+            mealsGrid.innerHTML = '';
+            
+            meals.forEach(meal => {
+                const mealCard = createMealCard(meal);
+                mealsGrid.appendChild(mealCard);
+            });
+        }
+        
+        // Create meal card element
+        function createMealCard(meal) {
+            const card = document.createElement('div');
+            card.className = 'meal-card';
+            card.innerHTML = `
+                <div class="meal-image">${meal.icon}</div>
+                <div class="meal-info">
+                    <div class="meal-details">
+                        <div class="meal-name">${meal.name}</div>
+                        <div class="meal-category">${meal.category}</div>
+                        <div class="meal-calories">${meal.calories} calories</div>
+                    </div>
+                    <button class="add-meal-btn" onclick="openMealModal(${meal.id})">+ Add</button>
+                </div>
+            `;
+            return card;
+        }
+        
+        // Filter meals by category
+        function filterMeals(category) {
+            currentFilter = category;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter and display meals
+            let filteredMeals = category === 'all' ? 
+                MEALS_DATABASE : 
+                MEALS_DATABASE.filter(meal => meal.category === category);
+            
+            displayMeals(filteredMeals);
+        }
+        
+        // Open meal details modal
+        function openMealModal(mealId) {
+            const meal = MEALS_DATABASE.find(m => m.id === mealId);
+            if (!meal) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'meal-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>${meal.icon} ${meal.name}</h2>
+                        <button class="close-modal" onclick="closeMealModal()">&times;</button>
+                    </div>
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <span style="background: #4A90E2; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600;">
+                            ${meal.calories} calories
+                        </span>
+                    </div>
+                    <div class="ingredient-list">
+                        <h3>🛒 Ingredients:</h3>
+                        ${meal.ingredients.map(ing => `
+                            <div class="ingredient-item">
+                                <span class="item-name">${ing.name}</span>
+                                <span class="item-quantity">${ing.quantity} ${ing.unit}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="recipe-steps">
+                        <h3>👩‍🍳 Recipe:</h3>
+                        ${meal.recipe.map(step => `<div class="recipe-step">${step}</div>`).join('')}
+                    </div>
+                    <div class="frequency-selector">
+                        <label>How many times this week?</label>
+                        <input type="number" class="frequency-input" id="meal-frequency" value="1" min="1" max="7">
+                        <span>times</span>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; padding: 16px; margin-top: 16px;" 
+                            onclick="addMealToPlan(${meal.id})">
+                        📅 Add to Meal Plan
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        // Close meal modal
+        function closeMealModal() {
+            const modal = document.querySelector('.meal-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Add meal to plan
+        function addMealToPlan(mealId) {
+            const meal = MEALS_DATABASE.find(m => m.id === mealId);
+            const frequency = parseInt(document.getElementById('meal-frequency').value) || 1;
+            
+            if (!meal) return;
+            
+            // Check if meal already in plan
+            const existingIndex = currentMealPlan.findIndex(pm => pm.meal.id === mealId);
+            
+            if (existingIndex >= 0) {
+                // Update frequency
+                currentMealPlan[existingIndex].frequency = frequency;
+            } else {
+                // Add new meal
+                currentMealPlan.push({
+                    meal: meal,
+                    frequency: frequency
+                });
+            }
+            
+            updateMealPlanDisplay();
+            closeMealModal();
+            
+            // Show feedback
+            alert(`${meal.name} added to your meal plan (${frequency}x per week)!`);
+        }
+        
+        // Update meal plan display
+        function updateMealPlanDisplay() {
+            const planList = document.getElementById('planned-meals-list');
+            const totalCalories = document.getElementById('planned-calories');
+            const totalMeals = document.getElementById('planned-meals');
+            
+            if (!planList || !totalCalories || !totalMeals) return;
+            
+            if (currentMealPlan.length === 0) {
+                planList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No meals planned yet. Browse the menu to add meals!</p>';
+                totalCalories.textContent = '0';
+                totalMeals.textContent = '0';
+                return;
+            }
+            
+            let weeklyCalories = 0;
+            let weeklyMealCount = 0;
+            
+            planList.innerHTML = currentMealPlan.map(plannedMeal => {
+                const totalMealCalories = plannedMeal.meal.calories * plannedMeal.frequency;
+                weeklyCalories += totalMealCalories;
+                weeklyMealCount += plannedMeal.frequency;
+                
+                return `
+                    <div class="planned-meal-item">
+                        <div class="planned-meal-info">
+                            <div class="planned-meal-name">${plannedMeal.meal.icon} ${plannedMeal.meal.name}</div>
+                            <div class="planned-meal-details">
+                                ${plannedMeal.frequency}x per week • ${totalMealCalories} total calories
+                            </div>
+                        </div>
+                        <button class="remove-meal-btn" onclick="removeMealFromPlan(${plannedMeal.meal.id})">
+                            Remove
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            totalCalories.textContent = weeklyCalories.toLocaleString();
+            totalMeals.textContent = weeklyMealCount;
+        }
+        
+        // Remove meal from plan
+        function removeMealFromPlan(mealId) {
+            currentMealPlan = currentMealPlan.filter(pm => pm.meal.id !== mealId);
+            updateMealPlanDisplay();
+        }
+        
+        // Clear entire meal plan
+        function clearMealPlan() {
+            console.log('Clear meal plan called');
+            try {
+                if (confirm('Are you sure you want to clear your entire meal plan?')) {
+                    currentMealPlan = [];
+                    updateMealPlanDisplay();
+                    alert('Meal plan cleared successfully!');
+                }
+            } catch (error) {
+                console.error('Error clearing meal plan:', error);
+                alert('Error clearing meal plan: ' + error.message);
+            }
+        }
+        
+        // Generate shopping list from meal plan
+        function generateShoppingList() {
+            console.log('Generate shopping list called');
+            console.log('Current meal plan:', currentMealPlan);
+            
+            if (currentMealPlan.length === 0) {
+                alert('Please add meals to your plan first!');
+                return;
+            }
+            
+            currentShoppingList = {};
+            
+            currentMealPlan.forEach(plannedMeal => {
+                console.log('Processing meal:', plannedMeal.meal.name, 'frequency:', plannedMeal.frequency);
+                plannedMeal.meal.ingredients.forEach(ingredient => {
+                    const key = ingredient.name;
+                    const totalQuantity = ingredient.quantity * plannedMeal.frequency;
+                    
+                    if (currentShoppingList[ingredient.category]) {
+                        if (currentShoppingList[ingredient.category][key]) {
+                            currentShoppingList[ingredient.category][key].quantity += totalQuantity;
+                        } else {
+                            currentShoppingList[ingredient.category][key] = {
+                                quantity: totalQuantity,
+                                unit: ingredient.unit
+                            };
+                        }
+                    } else {
+                        currentShoppingList[ingredient.category] = {
+                            [key]: {
+                                quantity: totalQuantity,
+                                unit: ingredient.unit
+                            }
+                        };
+                    }
+                });
+            });
+            
+            console.log('Generated shopping list:', currentShoppingList);
+            updateShoppingListDisplay();
+            switchScreen('shopping');
+            
+            // Show success message
+            alert('Shopping list generated! Check the Shopping List screen.');
+        }
+        
+        // Update shopping list display
+        function updateShoppingListDisplay() {
+            console.log('Updating shopping list display');
+            const shoppingCategories = document.getElementById('shopping-categories');
+            const emptyMsg = document.getElementById('empty-shopping-msg');
+            
+            console.log('Shopping categories element:', shoppingCategories);
+            console.log('Empty message element:', emptyMsg);
+            console.log('Current shopping list:', currentShoppingList);
+            
+            if (!shoppingCategories) {
+                console.error('shopping-categories element not found!');
+                return;
+            }
+            
+            if (Object.keys(currentShoppingList).length === 0) {
+                console.log('Shopping list is empty, showing empty message');
+                if (emptyMsg) emptyMsg.style.display = 'block';
+                shoppingCategories.innerHTML = '';
+                return;
+            }
+            
+            console.log('Shopping list has items, building display');
+            if (emptyMsg) emptyMsg.style.display = 'none';
+            
+            const categoryIcons = {
+                'meat': '🥩',
+                'seafood': '🐟',
+                'dairy': '🥛',
+                'vegetables': '🥕',
+                'fruits': '🍎',
+                'pantry': '🏪'
+            };
+            
+            const categoriesHTML = Object.entries(currentShoppingList).map(([category, items]) => `
+                <div class="shopping-category">
+                    <div class="category-title">
+                        ${categoryIcons[category] || '📦'} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    </div>
+                    ${Object.entries(items).map(([name, item]) => `
+                        <div class="shopping-item">
+                            <span class="item-name">${name}</span>
+                            <span class="item-quantity">${item.quantity} ${item.unit}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+            
+            console.log('Setting innerHTML:', categoriesHTML);
+            shoppingCategories.innerHTML = categoriesHTML;
+        }
+        
+        // Clear shopping list
+        function clearShoppingList() {
+            if (confirm('Are you sure you want to clear your shopping list?')) {
+                currentShoppingList = {};
+                updateShoppingListDisplay();
+            }
+        }
+        
+        // Load demo meal plan
+        function loadDemoMealPlan() {
+            console.log('Load demo meal plan called');
+            try {
+                // Add some sample meals to demonstrate the system
+                currentMealPlan = [
+                    { meal: MEALS_DATABASE.find(m => m.id === 1), frequency: 2 }, // Power Breakfast Bowl
+                    { meal: MEALS_DATABASE.find(m => m.id === 8), frequency: 3 }, // Grilled Chicken Caesar  
+                    { meal: MEALS_DATABASE.find(m => m.id === 14), frequency: 2 }, // Herb Crusted Salmon
+                    { meal: MEALS_DATABASE.find(m => m.id === 21), frequency: 4 }, // Apple Almond Butter
+                    { meal: MEALS_DATABASE.find(m => m.id === 10), frequency: 2 } // Quinoa Buddha Bowl
+                ];
+                
+                // Check if meals were found
+                const missingMeals = currentMealPlan.filter(pm => !pm.meal);
+                if (missingMeals.length > 0) {
+                    console.error('Some meals not found in database');
+                }
+                
+                updateMealPlanDisplay();
+                alert('Demo meal plan loaded! Now click "Generate Shopping List" to see the shopping list.');
+            } catch (error) {
+                console.error('Error loading demo meal plan:', error);
+                alert('Error loading demo: ' + error.message);
+            }
+        }
+        
+        // Load demo and immediately generate shopping list
+        function loadDemoAndGenerateList() {
+            console.log('Loading demo and generating list...');
+            
+            // Load demo meals
+            currentMealPlan = [
+                { meal: MEALS_DATABASE.find(m => m.id === 1), frequency: 2 }, // Power Breakfast Bowl
+                { meal: MEALS_DATABASE.find(m => m.id === 8), frequency: 3 }, // Grilled Chicken Caesar  
+                { meal: MEALS_DATABASE.find(m => m.id === 14), frequency: 2 }, // Herb Crusted Salmon
+                { meal: MEALS_DATABASE.find(m => m.id === 21), frequency: 4 }, // Apple Almond Butter
+                { meal: MEALS_DATABASE.find(m => m.id === 10), frequency: 2 } // Quinoa Buddha Bowl
+            ];
+            
+            console.log('Demo meals loaded:', currentMealPlan);
+            
+            updateMealPlanDisplay();
+            
+            // Generate shopping list immediately
+            setTimeout(() => {
+                generateShoppingList();
+            }, 500);
+        }
+    </script>
+</body>
+</html>
