@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapCal App Preview - Working</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                linear-gradient(130deg, rgba(17, 24, 39, 0.55), rgba(15, 23, 42, 0.35)),
+                url('https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat fixed;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 0 auto;
+            background: linear-gradient(160deg, #0b1220, #1a2238);
+            border-radius: 25px;
+            padding: 8px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 15%, rgba(255, 183, 197, 0.22), transparent 42%),
+                radial-gradient(circle at 88% 0%, rgba(255, 222, 153, 0.25), transparent 38%),
+                linear-gradient(180deg, #fff9f5 0%, #f8fbff 65%, #f4f8ff 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(90deg, #ff8ba7, #ffc27a);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .screen-content {
+            display: none !important;
+        }
+
+        .screen-content.active {
+            display: block !important;
+        }
+
+        .top-bar {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(6px);
+            padding: 16px 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 139, 167, 0.25);
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #9d4261;
+            letter-spacing: 0.2px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        .card {
+            background: rgba(255,255,255,0.85);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(74, 144, 226, 0.14);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -28px;
+            right: -18px;
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 183, 197, 0.24), rgba(255, 183, 197, 0));
+            pointer-events: none;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #a64066;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(255, 210, 222, 0.75), rgba(255, 238, 196, 0.75));
+            border: 1px solid rgba(255, 139, 167, 0.3);
+            border-radius: 999px;
+            padding: 5px 12px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .calories-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .progress-circle {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: conic-gradient(#4A90E2 0deg 234deg, #E5E5E5 234deg 360deg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-circle::before {
+            content: '';
+            width: 68px;
+            height: 68px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .calories-info {
+            flex: 1;
+        }
+
+        .calories-text {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .blue { background: #4A90E2; }
+        .gray { background: #E5E5E5; }
+        
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(74, 144, 226, 0.14);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2f80ed, #56ccf2);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: rgba(47, 128, 237, 0.08);
+            color: #1f5ea8;
+            border: 2px solid rgba(47, 128, 237, 0.55);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+        
+        .bottom-nav {
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(255, 139, 167, 0.26);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 8px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 139, 167, 0.16);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            line-height: 1;
+            transform: translateY(1px);
+        }
+        
+        .nav-item.active .nav-icon {
+            transform: scale(1.12);
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #c55378;
+            font-weight: 600;
+        }
+        
+        .screen-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 8px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+            padding: 16px;
+            z-index: 1000;
+            border: 1px solid rgba(74, 144, 226, 0.15);
+        }
+        
+        .screen-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .screen-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .screen-btn.active {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        .login-screen {
+            padding: 40px 20px;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .login-subtitle {
+            color: #666;
+            margin-bottom: 32px;
+        }
+        
+        .input-field {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px;
+            margin: 8px 0;
+            border: 2px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            border-color: #4A90E2;
+        }
+        
+        .login-btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 16px 0;
+            cursor: pointer;
+        }
+        
+        .text-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+        
+        /* Menu System Styles */
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(47, 128, 237, 0.55);
+            background: rgba(47, 128, 237, 0.08);
+            color: #1f5ea8;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #2f80ed, #56ccf2);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .meal-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(74, 144, 226, 0.12);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .meal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+        }
+        
+        .meal-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        .meal-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .meal-details {
+            flex: 1;
+        }
+        
+        .meal-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+        
+        .meal-category {
+            font-size: 12px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .meal-calories {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4A90E2;
+        }
+        
+        .add-meal-btn {
+            padding: 8px 16px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .meal-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .ingredient-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+        
+        .recipe-steps {
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        
+        .recipe-step {
+            margin-bottom: 8px;
+            padding-left: 16px;
+            position: relative;
+        }
+        
+        .recipe-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #4A90E2;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .recipe-steps {
+            counter-reset: step-counter;
+        }
+        
+        .frequency-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .frequency-input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .planned-meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .planned-meal-info {
+            flex: 1;
+        }
+        
+        .planned-meal-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .planned-meal-details {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .remove-meal-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .shopping-category {
+            margin-bottom: 16px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .item-name {
+            font-weight: 500;
+        }
+        
+        .item-quantity {
+            font-size: 14px;
+            color: #666;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+
+            .screen-selector {
+                top: 8px;
+                right: 8px;
+                padding: 10px;
+                transform: scale(0.92);
+                transform-origin: top right;
+                max-width: 180px;
+            }
+
+            .phone-frame {
+                width: 100%;
+                max-width: 390px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-selector">
+        <h3 style="margin-bottom: 12px; font-size: 14px;">📱 App Screens</h3>
+        <button class="screen-btn" data-screen="login">🔐 Login</button>
+        <button class="screen-btn active" data-screen="dashboard">🏠 Dashboard</button>
+        <button class="screen-btn" data-screen="scan">📸 Scan</button>
+        <button class="screen-btn" data-screen="menu">🍽️ Menu</button>
+        <button class="screen-btn" data-screen="manual">✏️ Manual Entry</button>
+        <button class="screen-btn" data-screen="progress">📊 Progress</button>
+        <button class="screen-btn" data-screen="planner">📅 Meal Plan</button>
+        <button class="screen-btn" data-screen="shopping">🛒 Shopping List</button>
+    </div>
+
+    <div class="phone-frame">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>🔋 100%</span>
+            </div>
+            
+            <!-- Login Screen -->
+            <div id="login" class="screen-content login-screen">
+                <div>
+                    <h1 class="login-title">SnapCal</h1>
+                    <p class="login-subtitle" id="auth-subtitle">Log in to continue</p>
+                    <input id="auth-username" type="text" class="input-field" placeholder="Username">
+                    <input id="auth-password" type="password" class="input-field" placeholder="Password">
+                    <button id="auth-submit-btn" class="login-btn" onclick="handleAuthAction()">Login</button>
+                    <button id="auth-toggle-btn" class="text-btn" onclick="toggleAuthMode()">Sign Up</button>
+                    <button class="text-btn" onclick="handleForgotPassword()">Forgot password?</button>
+                    <p id="auth-message" style="margin-top: 12px; min-height: 20px; font-size: 13px; color: #1f5ea8;"></p>
+                </div>
+            </div>
+            
+            <!-- Dashboard Screen -->
+            <div id="dashboard" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>Dashboard</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Calories (in vs out)</div>
+                    <div class="calories-section">
+                        <div class="progress-circle" id="dashboard-balance-circle"></div>
+                        <div class="calories-info">
+                            <div class="calories-text" id="dashboard-calorie-line">In: 0 kcal   Out: 0 kcal</div>
+                            <div class="calories-text" style="font-weight: 600;" id="dashboard-balance-line">Balance: 0 kcal</div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-color blue"></div>
+                                    <span>Burned</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color gray"></div>
+                                    <span>Consumed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎯 Weekly Calorie Goal</div>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;">
+                        <input id="goal-calories" type="number" min="500" class="input-field" placeholder="Weekly burn goal (kcal)" style="max-width: none; margin: 0; padding: 10px;">
+                        <button class="btn btn-primary" style="flex: none;" onclick="saveCalorieGoal()">Save</button>
+                    </div>
+                    <div id="goal-status" style="margin-top: 8px; font-size: 13px; color: #666;">No goal set yet.</div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="card-title">Activities</div>
+                        <div class="stat-value" id="dashboard-activity-count">0</div>
+                        <div class="stat-label">Logged this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="card-title">Workouts</div>
+                        <div class="stat-value" id="dashboard-next-workout">None</div>
+                        <div class="stat-label" id="dashboard-next-workout-time">Add one below</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🏃 Add Activity</div>
+                    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr 1fr; gap: 8px; margin-bottom: 8px;">
+                        <input id="activity-name" type="text" class="input-field" placeholder="Activity (Running)" style="max-width: none; margin: 0; padding: 10px;">
+                        <input id="activity-calories" type="number" min="1" class="input-field" placeholder="Burned kcal" style="max-width: none; margin: 0; padding: 10px;">
+                        <input id="activity-date" type="date" class="input-field" style="max-width: none; margin: 0; padding: 10px;">
+                    </div>
+                    <button class="btn btn-success" style="width: 100%;" onclick="addActivityLog()">+ Log Activity</button>
+                    <div id="activity-log-list" style="margin-top: 10px; display: grid; gap: 6px;"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🗓️ Workout Calendar</div>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 8px; margin-bottom: 8px;">
+                        <input id="workout-name" type="text" class="input-field" placeholder="Workout name" style="max-width: none; margin: 0; padding: 10px;">
+                        <input id="workout-date" type="date" class="input-field" style="max-width: none; margin: 0; padding: 10px;">
+                        <button class="btn btn-outline" style="flex: none;" onclick="addWorkoutSchedule()">Add</button>
+                    </div>
+                    <div id="next-workout-banner" style="font-size: 13px; color: #6b3a55; margin-bottom: 8px;">Next workout is: not scheduled</div>
+                    <div id="workout-calendar-list" style="display: grid; gap: 6px;"></div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Quick Actions</div>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="switchScreen('scan')">📷 Scan Label</button>
+                        <button class="btn btn-outline" onclick="switchScreen('menu')">🍽️ Browse Menu</button>
+                        <button class="btn btn-outline" onclick="switchScreen('manual')">✏️ Add Recipe</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scan Screen -->
+            <div id="scan" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📸 Scan Product / Receipt</h1>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 100%; height: 220px; background: #0F172A; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                        <div style="width: 90%; height: 75%; background: #1F2937; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #CBD5E1; text-align: center; line-height: 1.5;">
+                            📱 Align label inside the frame<br>💡 Good lighting improves accuracy
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 12px 24px;">📷 Capture Photo</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">🥛 Detected Item</div>
+                    <div style="font-weight: 600; margin-bottom: 12px;">Greek Yogurt 2% (170 g)</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Calories</div>
+                            <div style="font-weight: 600;">130 kcal</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Protein</div>
+                            <div style="font-weight: 600;">12 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Carbs</div>
+                            <div style="font-weight: 600;">5 g</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Fat</div>
+                            <div style="font-weight: 600;">4 g</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-outline">✏️ Edit</button>
+                        <button class="btn btn-primary" onclick="switchScreen('dashboard')">✓ Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manual Entry Screen -->
+            <div id="manual" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>✏️ Add Meal Manually</h1>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🌐 Quick Import Recipe</div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input id="online-recipe-query" type="text" class="input-field" placeholder="Search online recipe (e.g., lasagna)" style="max-width: none; margin: 0; padding: 10px; flex: 1;">
+                        <button class="btn btn-outline" style="flex: none;" onclick="searchOnlineRecipes()">Search</button>
+                    </div>
+                    <div id="online-recipe-results" style="display: grid; gap: 8px;"></div>
+                </div>
+
+                <div class="card" style="display: grid; gap: 10px;">
+                    <div class="card-title">Create Your Own Meal</div>
+                    <input id="manual-meal-name" type="text" class="input-field" placeholder="Meal name (e.g., Lasagna)" style="max-width: none; margin: 0;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <input id="manual-portions" type="number" min="1" class="input-field" placeholder="Portions" style="max-width: none; margin: 0;">
+                        <input id="manual-calories" type="number" min="1" class="input-field" placeholder="Calories" style="max-width: none; margin: 0;">
+                        <select id="manual-category" class="input-field" style="max-width: none; margin: 0;">
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="snack">Snack</option>
+                        </select>
+                    </div>
+                    <input id="manual-icon" type="text" class="input-field" placeholder="Icon (optional, e.g., 🍝)" style="max-width: none; margin: 0;">
+
+                    <div class="card-title" style="font-size: 14px; margin: 4px 0 0;">Ingredients</div>
+                    <div id="manual-ingredients-list" style="display: grid; gap: 8px;"></div>
+                    <button class="btn btn-outline" style="width: 100%;" onclick="addManualIngredientRow()">+ Add Ingredient</button>
+
+                    <label style="font-size: 13px; color: #666;">Instructions (one step per line)</label>
+                    <textarea id="manual-instructions" style="min-height: 100px; border: 2px solid #E5E5E5; border-radius: 8px; padding: 10px; font-family: inherit;" placeholder="Prepare sauce&#10;Layer pasta and cheese&#10;Bake at 375F for 45 minutes"></textarea>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-outline" id="manual-cancel-btn" onclick="cancelManualEdit()" style="flex: 1; padding: 16px; display: none;">Cancel Edit</button>
+                        <button class="btn btn-primary" id="manual-save-btn" onclick="saveManualMeal()" style="flex: 1; padding: 16px;">💾 Save Meal to Menu</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Screen -->
+            <div id="progress" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📊 Progress</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">🔥 Weekly Calorie Outcome</div>
+                    <div id="progress-calorie-summary" style="height: 90px; background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1976D2; font-weight: 600; text-align: center; padding: 10px;">
+                        No data yet.
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">📊 Calories In vs Out (weekly)</div>
+                    <div id="progress-weekly-bars" style="display: flex; justify-content: space-between; align-items: end; height: 120px; padding: 16px 0;"></div>
+                    <div style="font-size: 12px; color: #666;">Blue: Burned calories • Gray: Consumed calories</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ Workouts Accomplished</div>
+                    <div id="progress-workouts-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">💬 Coach Message</div>
+                    <div id="progress-motivation" style="padding: 12px; border-radius: 10px; background: #fff5f9; color: #7b2f53; font-weight: 600;">
+                        Let’s get moving.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Menu Screen -->
+            <div id="menu" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>🍽️ Healthy Menu</h1>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                        <div>
+                            <div class="card-title" style="margin-bottom: 6px;">Your Recipes</div>
+                            <div style="font-size: 13px; color: #666;" id="custom-recipe-count">0 custom recipes</div>
+                        </div>
+                        <button class="btn btn-primary" style="flex: none;" onclick="openCustomRecipeModal()">+ Add Recipe</button>
+                    </div>
+                    <div id="custom-recipe-manager" style="margin-top: 12px; display: grid; gap: 8px;"></div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding: 4px;">
+                        <button class="filter-btn active" data-filter="all" onclick="filterMeals('all')">All</button>
+                        <button class="filter-btn" data-filter="breakfast" onclick="filterMeals('breakfast')">🌅 Breakfast</button>
+                        <button class="filter-btn" data-filter="lunch" onclick="filterMeals('lunch')">🌞 Lunch</button>
+                        <button class="filter-btn" data-filter="dinner" onclick="filterMeals('dinner')">🌙 Dinner</button>
+                        <button class="filter-btn" data-filter="snack" onclick="filterMeals('snack')">🥜 Snacks</button>
+                    </div>
+                </div>
+                
+                <div id="meals-grid" style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                    <!-- Meals will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Meal Planner Screen -->
+            <div id="planner" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>📅 Weekly Meal Plan</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">📊 Weekly Overview</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div style="text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #4A90E2;" id="planned-calories">0</div>
+                            <div style="font-size: 14px; color: #666;">Weekly Calories</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: #f0fff0; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #28a745;" id="planned-meals">0</div>
+                            <div style="font-size: 14px; color: #666;">Planned Meals</div>
+                        </div>
+                    </div>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="clearMealPlan()">🗑️ Clear Plan</button>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: transparent; color: #4A90E2; border: 2px solid #4A90E2; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="loadDemoMealPlan()">✨ Load Demo Plan</button>
+                    <button style="width: 100%; margin-bottom: 12px; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="loadDemoAndGenerateList()">⚡ Demo + Shopping List</button>
+                    <button style="width: 100%; padding: 12px; background: transparent; color: #4A90E2; border: 2px solid #4A90E2; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="generateShoppingList()">🛒 Generate Shopping List</button>
+                </div>
+                
+                <div id="meal-plan-list">
+                    <div class="card">
+                        <div class="card-title">Your Weekly Meal Plan</div>
+                        <div id="planned-meals-list">
+                            <p style="text-align: center; color: #666; padding: 20px;">No meals planned yet. Browse the menu to add meals!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shopping List Screen -->
+            <div id="shopping" class="screen-content app-content">
+                <div class="top-bar">
+                    <h1>🛒 Shopping List</h1>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">➕ Add Item Manually</div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                        <input id="manual-item-name" type="text" class="input-field" placeholder="Ingredient" style="max-width: none; margin: 0; padding: 10px;">
+                        <input id="manual-item-qty" type="number" min="0" step="0.1" class="input-field" placeholder="Qty" style="max-width: none; margin: 0; padding: 10px;">
+                        <input id="manual-item-unit" type="text" class="input-field" placeholder="Unit" style="max-width: none; margin: 0; padding: 10px;">
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="manual-item-category" class="input-field" style="max-width: none; margin: 0; padding: 10px; flex: 1;">
+                            <option value="pantry">Pantry</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="fruits">Fruits</option>
+                            <option value="dairy">Dairy</option>
+                            <option value="meat">Meat</option>
+                            <option value="seafood">Seafood</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <button class="btn btn-success" style="flex: none;" onclick="addManualShoppingItem()">Add Item</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div class="card-title">📝 Your Shopping List</div>
+                        <button class="btn btn-outline" onclick="clearShoppingList()" style="flex: none; padding: 8px 16px;">Clear All</button>
+                    </div>
+                    <div id="shopping-categories">
+                        <!-- Shopping list will be populated by JavaScript -->
+                        <p style="text-align: center; color: #666; padding: 20px;" id="empty-shopping-msg">Generate your shopping list from your meal plan!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="switchScreen('dashboard')">
+                    <div class="nav-icon">🍓</div>
+                    <div class="nav-label">Dashboard</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('menu')">
+                    <div class="nav-icon">🍽️</div>
+                    <div class="nav-label">Menu</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('planner')">
+                    <div class="nav-icon">📅</div>
+                    <div class="nav-label">Plan</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('shopping')">
+                    <div class="nav-icon">🛒</div>
+                    <div class="nav-label">Shopping</div>
+                </div>
+                <div class="nav-item" onclick="switchScreen('progress')">
+                    <div class="nav-icon">🥕</div>
+                    <div class="nav-label">Progress</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AUTH_KEY = 'snapcal.auth.v1';
+
+        let isSignupMode = false;
+
+        function getAuthState() {
+            try {
+                return JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function setAuthState(state) {
+            localStorage.setItem(AUTH_KEY, JSON.stringify(state));
+        }
+
+        function isLoggedIn() {
+            return Boolean(getAuthState().loggedIn);
+        }
+
+        function updateAuthUi() {
+            const subtitle = document.getElementById('auth-subtitle');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const toggleBtn = document.getElementById('auth-toggle-btn');
+            if (!subtitle || !submitBtn || !toggleBtn) return;
+
+            subtitle.textContent = isSignupMode ? 'Create your account' : 'Log in to continue';
+            submitBtn.textContent = isSignupMode ? 'Sign Up' : 'Login';
+            toggleBtn.textContent = isSignupMode ? 'Back to Login' : 'Sign Up';
+        }
+
+        function showAuthMessage(message, isError = false) {
+            const messageEl = document.getElementById('auth-message');
+            if (!messageEl) return;
+            messageEl.textContent = message;
+            messageEl.style.color = isError ? '#b42318' : '#1f5ea8';
+        }
+
+        function toggleAuthMode() {
+            isSignupMode = !isSignupMode;
+            updateAuthUi();
+            showAuthMessage('');
+        }
+
+        function handleAuthAction() {
+            const usernameInput = document.getElementById('auth-username');
+            const passwordInput = document.getElementById('auth-password');
+            const username = (usernameInput.value || '').trim();
+            const password = (passwordInput.value || '').trim();
+
+            if (!username || !password) {
+                showAuthMessage('Please enter username and password.', true);
+                return;
+            }
+
+            const auth = getAuthState();
+
+            if (isSignupMode) {
+                if (auth.username && auth.username === username) {
+                    showAuthMessage('Username already exists. Please choose another.', true);
+                    return;
+                }
+
+                setAuthState({ username, password, loggedIn: true });
+                showAuthMessage('Account created. You are now logged in.');
+                switchScreen('dashboard');
+                return;
+            }
+
+            if (!auth.username) {
+                showAuthMessage('No account found. Please sign up first.', true);
+                return;
+            }
+
+            if (auth.username === username && auth.password === password) {
+                setAuthState({ ...auth, loggedIn: true });
+                showAuthMessage('Login successful.');
+                switchScreen('dashboard');
+            } else {
+                showAuthMessage('Incorrect username or password.', true);
+            }
+        }
+
+        function handleForgotPassword() {
+            showAuthMessage('We sent you an email to recover your user');
+        }
+
+        // Simple, guaranteed-to-work screen switching function
+        function switchScreen(screenName) {
+            console.log('Switching to:', screenName);
+
+            if (!isLoggedIn() && screenName !== 'login') {
+                screenName = 'login';
+            }
+            
+            // Hide all screens
+            const allScreens = document.querySelectorAll('.screen-content');
+            allScreens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show target screen
+            const targetScreen = document.getElementById(screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                console.log('Successfully switched to:', screenName);
+                
+                // Initialize screen-specific content
+                if (screenName === 'menu') {
+                    displayFilteredMeals();
+                    updateCustomRecipeCount();
+                } else if (screenName === 'dashboard') {
+                    updateDashboardSummary();
+                    renderActivityList();
+                    renderWorkoutCalendar();
+                } else if (screenName === 'planner') {
+                    updateMealPlanDisplay();
+                } else if (screenName === 'shopping') {
+                    updateShoppingListDisplay();
+                } else if (screenName === 'progress') {
+                    updateProgressDisplay();
+                }
+                
+            } else {
+                console.error('Screen not found:', screenName);
+            }
+            
+            // Update screen selector buttons
+            const allButtons = document.querySelectorAll('.screen-btn');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-screen') === screenName) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update bottom navigation
+            const allNavItems = document.querySelectorAll('.nav-item');
+            allNavItems.forEach(nav => nav.classList.remove('active'));
+            
+            // Set correct nav item as active
+            const navItems = document.querySelectorAll('.nav-item');
+            if (screenName === 'dashboard' && navItems[0]) navItems[0].classList.add('active');
+            if (screenName === 'menu' && navItems[1]) navItems[1].classList.add('active');
+            if (screenName === 'planner' && navItems[2]) navItems[2].classList.add('active');
+            if (screenName === 'shopping' && navItems[3]) navItems[3].classList.add('active');
+            if (screenName === 'progress' && navItems[4]) navItems[4].classList.add('active');
+            if (screenName === 'scan' && navItems[5]) navItems[5].classList.add('active');
+            if (screenName === 'manual' && navItems[6]) navItems[6].classList.add('active');
+        }
+        
+        // Set up event listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded - setting up SnapCal app');
+            
+            // Screen selector buttons
+            const screenButtons = document.querySelectorAll('.screen-btn');
+            screenButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const screen = this.getAttribute('data-screen');
+                    console.log('Button clicked for screen:', screen);
+                    switchScreen(screen);
+                });
+            });
+            
+            // Initialize meal system
+            initializeMealSystem();
+            updateAuthUi();
+            
+            // Show dashboard only when logged in
+            setTimeout(() => {
+                console.log('Switching to initial screen');
+                switchScreen(isLoggedIn() ? 'dashboard' : 'login');
+            }, 100);
+            
+            console.log('SnapCal app ready!');
+        });
+        
+        // Meal Database - 25 Healthy Meals
+        const MEALS_DATABASE = [
+            // BREAKFAST (7 meals)
+            {
+                id: 1, name: "Power Breakfast Bowl", category: "breakfast", calories: 420, icon: "🍳",
+                ingredients: [
+                    {name: "Large eggs", quantity: 3, unit: "pieces", category: "dairy"},
+                    {name: "Turkey bacon", quantity: 4, unit: "strips", category: "meat"},
+                    {name: "Medium potatoes", quantity: 2, unit: "pieces", category: "vegetables"},
+                    {name: "Cheddar cheese", quantity: 50, unit: "g", category: "dairy"},
+                    {name: "Olive oil", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Heat oil in pan", "Cook diced potatoes until golden", "Add beaten eggs and scramble", "Cook bacon separately", "Top with cheese and bacon"]
+            },
+            {
+                id: 2, name: "Overnight Oats Berry Boost", category: "breakfast", calories: 350, icon: "🥣",
+                ingredients: [
+                    {name: "Rolled oats", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Greek yogurt", quantity: 150, unit: "g", category: "dairy"},
+                    {name: "Mixed berries", quantity: 100, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Chia seeds", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Mix oats with yogurt", "Add honey and chia seeds", "Layer with berries", "Refrigerate overnight", "Enjoy cold in the morning"]
+            },
+            {
+                id: 3, name: "Avocado Toast Deluxe", category: "breakfast", calories: 380, icon: "🥑",
+                ingredients: [
+                    {name: "Whole grain bread", quantity: 2, unit: "slices", category: "pantry"},
+                    {name: "Ripe avocado", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Cherry tomatoes", quantity: 6, unit: "pieces", category: "vegetables"},
+                    {name: "Feta cheese", quantity: 30, unit: "g", category: "dairy"},
+                    {name: "Lemon juice", quantity: 1, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Toast bread until golden", "Mash avocado with lemon", "Spread on toast", "Top with tomatoes and feta", "Season with salt and pepper"]
+            },
+            {
+                id: 4, name: "Protein Smoothie Bowl", category: "breakfast", calories: 320, icon: "🥤",
+                ingredients: [
+                    {name: "Protein powder", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Banana", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Spinach", quantity: 50, unit: "g", category: "vegetables"},
+                    {name: "Almond milk", quantity: 250, unit: "ml", category: "dairy"},
+                    {name: "Granola", quantity: 30, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Blend protein powder with milk", "Add banana and spinach", "Blend until smooth", "Pour into bowl", "Top with granola"]
+            },
+            {
+                id: 5, name: "Veggie Scramble Wrap", category: "breakfast", calories: 360, icon: "🌯",
+                ingredients: [
+                    {name: "Large eggs", quantity: 2, unit: "pieces", category: "dairy"},
+                    {name: "Whole wheat tortilla", quantity: 1, unit: "piece", category: "pantry"},
+                    {name: "Bell pepper", quantity: 0.5, unit: "piece", category: "vegetables"},
+                    {name: "Mushrooms", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Spinach", quantity: 50, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Sauté vegetables until tender", "Beat and scramble eggs", "Combine eggs with vegetables", "Warm tortilla", "Wrap filling in tortilla"]
+            },
+            {
+                id: 6, name: "Quinoa Breakfast Bowl", category: "breakfast", calories: 390, icon: "🍲",
+                ingredients: [
+                    {name: "Quinoa", quantity: 60, unit: "g", category: "pantry"},
+                    {name: "Almond milk", quantity: 200, unit: "ml", category: "dairy"},
+                    {name: "Blueberries", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Almonds", quantity: 20, unit: "g", category: "pantry"},
+                    {name: "Cinnamon", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Cook quinoa in almond milk", "Add cinnamon while cooking", "Top with fresh blueberries", "Sprinkle with almonds", "Serve warm"]
+            },
+            {
+                id: 7, name: "Greek Yogurt Parfait", category: "breakfast", calories: 300, icon: "🥜",
+                ingredients: [
+                    {name: "Greek yogurt", quantity: 200, unit: "g", category: "dairy"},
+                    {name: "Granola", quantity: 40, unit: "g", category: "pantry"},
+                    {name: "Strawberries", quantity: 100, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 1, unit: "tbsp", category: "pantry"},
+                    {name: "Walnuts", quantity: 15, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Layer yogurt in glass", "Add granola layer", "Add strawberry layer", "Repeat layers", "Top with honey and walnuts"]
+            },
+            
+            // LUNCH (6 meals)
+            {
+                id: 8, name: "Grilled Chicken Caesar", category: "lunch", calories: 450, icon: "🥗",
+                ingredients: [
+                    {name: "Chicken breast", quantity: 150, unit: "g", category: "meat"},
+                    {name: "Romaine lettuce", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Parmesan cheese", quantity: 30, unit: "g", category: "dairy"},
+                    {name: "Caesar dressing", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Croutons", quantity: 20, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Season and grill chicken", "Chop romaine lettuce", "Slice grilled chicken", "Toss lettuce with dressing", "Top with chicken, cheese, croutons"]
+            },
+            {
+                id: 9, name: "Turkey Club Wrap", category: "lunch", calories: 420, icon: "🥙",
+                ingredients: [
+                    {name: "Turkey breast", quantity: 120, unit: "g", category: "meat"},
+                    {name: "Whole wheat wrap", quantity: 1, unit: "piece", category: "pantry"},
+                    {name: "Avocado", quantity: 0.5, unit: "piece", category: "fruits"},
+                    {name: "Tomato", quantity: 1, unit: "piece", category: "vegetables"},
+                    {name: "Lettuce", quantity: 50, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Lay out wrap", "Spread mashed avocado", "Add turkey slices", "Add tomato and lettuce", "Roll wrap tightly"]
+            },
+            {
+                id: 10, name: "Quinoa Buddha Bowl", category: "lunch", calories: 480, icon: "🍜",
+                ingredients: [
+                    {name: "Quinoa", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Chickpeas", quantity: 150, unit: "g", category: "pantry"},
+                    {name: "Sweet potato", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Kale", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Tahini", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Cook quinoa according to package", "Roast sweet potato cubes", "Massage kale with oil", "Combine all ingredients", "Drizzle with tahini dressing"]
+            },
+            {
+                id: 11, name: "Salmon Poke Bowl", category: "lunch", calories: 520, icon: "🍣",
+                ingredients: [
+                    {name: "Fresh salmon", quantity: 150, unit: "g", category: "seafood"},
+                    {name: "Sushi rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Edamame", quantity: 80, unit: "g", category: "vegetables"},
+                    {name: "Soy sauce", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Cook sushi rice", "Dice fresh salmon", "Slice cucumber", "Steam edamame", "Assemble bowl with soy sauce"]
+            },
+            {
+                id: 12, name: "Mediterranean Bowl", category: "lunch", calories: 460, icon: "🫒",
+                ingredients: [
+                    {name: "Brown rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Grilled chicken", quantity: 120, unit: "g", category: "meat"},
+                    {name: "Feta cheese", quantity: 50, unit: "g", category: "dairy"},
+                    {name: "Olives", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Cook brown rice", "Grill and slice chicken", "Dice cucumber", "Combine all ingredients", "Add olive oil and herbs"]
+            },
+            {
+                id: 13, name: "Veggie Lentil Soup", category: "lunch", calories: 380, icon: "🍲",
+                ingredients: [
+                    {name: "Red lentils", quantity: 100, unit: "g", category: "pantry"},
+                    {name: "Vegetable broth", quantity: 500, unit: "ml", category: "pantry"},
+                    {name: "Carrots", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Celery", quantity: 80, unit: "g", category: "vegetables"},
+                    {name: "Onion", quantity: 1, unit: "piece", category: "vegetables"}
+                ],
+                recipe: ["Sauté diced vegetables", "Add lentils and broth", "Simmer for 20 minutes", "Season with herbs", "Serve hot"]
+            },
+            
+            // DINNER (7 meals)
+            {
+                id: 14, name: "Herb Crusted Salmon", category: "dinner", calories: 580, icon: "🐟",
+                ingredients: [
+                    {name: "Salmon fillet", quantity: 200, unit: "g", category: "seafood"},
+                    {name: "Asparagus", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Baby potatoes", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"},
+                    {name: "Fresh herbs", quantity: 20, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Season salmon with herbs", "Roast potatoes and asparagus", "Pan-sear salmon", "Cook until flaky", "Serve with roasted vegetables"]
+            },
+            {
+                id: 15, name: "Chicken Stir-fry", category: "dinner", calories: 520, icon: "🍗",
+                ingredients: [
+                    {name: "Chicken breast", quantity: 180, unit: "g", category: "meat"},
+                    {name: "Mixed vegetables", quantity: 250, unit: "g", category: "vegetables"},
+                    {name: "Brown rice", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Soy sauce", quantity: 3, unit: "tbsp", category: "pantry"},
+                    {name: "Garlic", quantity: 3, unit: "cloves", category: "vegetables"}
+                ],
+                recipe: ["Cook brown rice", "Cut chicken into strips", "Stir-fry chicken until golden", "Add vegetables and garlic", "Finish with soy sauce"]
+            },
+            {
+                id: 16, name: "Lean Beef & Sweet Potato", category: "dinner", calories: 620, icon: "🥩",
+                ingredients: [
+                    {name: "Lean beef", quantity: 180, unit: "g", category: "meat"},
+                    {name: "Sweet potato", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Green beans", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Red wine", quantity: 50, unit: "ml", category: "pantry"},
+                    {name: "Thyme", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Season beef with thyme", "Roast sweet potato wedges", "Sear beef to desired doneness", "Steam green beans", "Deglaze pan with wine"]
+            },
+            {
+                id: 17, name: "Shrimp Zucchini Noodles", category: "dinner", calories: 380, icon: "🍤",
+                ingredients: [
+                    {name: "Large shrimp", quantity: 200, unit: "g", category: "seafood"},
+                    {name: "Zucchini", quantity: 300, unit: "g", category: "vegetables"},
+                    {name: "Cherry tomatoes", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Garlic", quantity: 4, unit: "cloves", category: "vegetables"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Spiralize zucchini into noodles", "Sauté garlic in olive oil", "Add shrimp and cook", "Add tomatoes and zucchini", "Cook until shrimp is pink"]
+            },
+            {
+                id: 18, name: "Turkey Meatballs & Pasta", category: "dinner", calories: 560, icon: "🍝",
+                ingredients: [
+                    {name: "Ground turkey", quantity: 150, unit: "g", category: "meat"},
+                    {name: "Whole wheat pasta", quantity: 80, unit: "g", category: "pantry"},
+                    {name: "Marinara sauce", quantity: 150, unit: "ml", category: "pantry"},
+                    {name: "Mozzarella cheese", quantity: 40, unit: "g", category: "dairy"},
+                    {name: "Basil", quantity: 10, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Form turkey into meatballs", "Cook pasta according to package", "Brown meatballs in pan", "Add marinara sauce", "Serve over pasta with cheese"]
+            },
+            {
+                id: 19, name: "Grilled Portobello Stack", category: "dinner", calories: 350, icon: "🍄",
+                ingredients: [
+                    {name: "Portobello mushrooms", quantity: 2, unit: "pieces", category: "vegetables"},
+                    {name: "Eggplant", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Bell peppers", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Goat cheese", quantity: 60, unit: "g", category: "dairy"},
+                    {name: "Balsamic vinegar", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Grill mushrooms and vegetables", "Layer vegetables on mushroom", "Top with goat cheese", "Drizzle with balsamic", "Serve immediately"]
+            },
+            {
+                id: 20, name: "Cod with Roasted Vegetables", category: "dinner", calories: 420, icon: "🐠",
+                ingredients: [
+                    {name: "Cod fillet", quantity: 180, unit: "g", category: "seafood"},
+                    {name: "Brussels sprouts", quantity: 200, unit: "g", category: "vegetables"},
+                    {name: "Carrots", quantity: 150, unit: "g", category: "vegetables"},
+                    {name: "Lemon", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Olive oil", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Roast vegetables with olive oil", "Season cod with lemon", "Bake cod for 15 minutes", "Check fish is flaky", "Serve with roasted vegetables"]
+            },
+            
+            // SNACKS (5 meals)
+            {
+                id: 21, name: "Apple Almond Butter", category: "snack", calories: 220, icon: "🍎",
+                ingredients: [
+                    {name: "Apple", quantity: 1, unit: "piece", category: "fruits"},
+                    {name: "Almond butter", quantity: 2, unit: "tbsp", category: "pantry"}
+                ],
+                recipe: ["Core and slice apple", "Serve with almond butter for dipping"]
+            },
+            {
+                id: 22, name: "Greek Yogurt Berry Cup", category: "snack", calories: 180, icon: "🫐",
+                ingredients: [
+                    {name: "Greek yogurt", quantity: 150, unit: "g", category: "dairy"},
+                    {name: "Mixed berries", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Honey", quantity: 1, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Add berries to yogurt", "Drizzle with honey", "Mix gently"]
+            },
+            {
+                id: 23, name: "Hummus Veggie Plate", category: "snack", calories: 190, icon: "🥕",
+                ingredients: [
+                    {name: "Hummus", quantity: 60, unit: "g", category: "pantry"},
+                    {name: "Carrots", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Cucumber", quantity: 100, unit: "g", category: "vegetables"},
+                    {name: "Bell pepper", quantity: 80, unit: "g", category: "vegetables"}
+                ],
+                recipe: ["Cut vegetables into sticks", "Arrange on plate", "Serve with hummus"]
+            },
+            {
+                id: 24, name: "Protein Energy Balls", category: "snack", calories: 240, icon: "⚽",
+                ingredients: [
+                    {name: "Dates", quantity: 80, unit: "g", category: "fruits"},
+                    {name: "Almonds", quantity: 30, unit: "g", category: "pantry"},
+                    {name: "Protein powder", quantity: 15, unit: "g", category: "pantry"},
+                    {name: "Coconut flakes", quantity: 15, unit: "g", category: "pantry"}
+                ],
+                recipe: ["Blend dates and almonds", "Add protein powder", "Form into balls", "Roll in coconut", "Chill for 30 minutes"]
+            },
+            {
+                id: 25, name: "Avocado Toast Bites", category: "snack", calories: 160, icon: "🥪",
+                ingredients: [
+                    {name: "Whole grain crackers", quantity: 6, unit: "pieces", category: "pantry"},
+                    {name: "Avocado", quantity: 0.5, unit: "piece", category: "fruits"},
+                    {name: "Cherry tomatoes", quantity: 3, unit: "pieces", category: "vegetables"},
+                    {name: "Sea salt", quantity: 0.5, unit: "tsp", category: "pantry"}
+                ],
+                recipe: ["Mash avocado with salt", "Spread on crackers", "Top with tomato slices", "Serve immediately"]
+            }
+        ];
+        
+        const STORAGE_KEY = 'snapcal.v2';
+
+        // Global state
+        let currentMealPlan = [];
+        let currentShoppingList = {};
+        let currentFilter = 'all';
+        let customRecipes = [];
+        let onlineSearchCache = [];
+        let editingCustomRecipeId = null;
+        let activityLogs = [];
+        let workoutSchedule = [];
+        let fitnessGoals = { weeklyBurnGoal: 1200 };
+
+        function getTodayIso() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function getStartOfWeek(date = new Date()) {
+            const copy = new Date(date);
+            const day = (copy.getDay() + 6) % 7;
+            copy.setHours(0, 0, 0, 0);
+            copy.setDate(copy.getDate() - day);
+            return copy;
+        }
+
+        function toDateOnly(isoDate) {
+            const date = new Date(isoDate);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
+
+        function isWithinCurrentWeek(isoDate) {
+            if (!isoDate) return false;
+            const start = getStartOfWeek();
+            const end = new Date(start);
+            end.setDate(start.getDate() + 7);
+            const target = toDateOnly(isoDate);
+            return target >= start && target < end;
+        }
+
+        function getWeeklyConsumedCalories() {
+            return currentMealPlan.reduce((sum, entry) => sum + (entry.meal.calories * entry.frequency), 0);
+        }
+
+        function getWeeklyBurnedCalories() {
+            return activityLogs
+                .filter(log => isWithinCurrentWeek(log.date))
+                .reduce((sum, log) => sum + (parseFloat(log.calories) || 0), 0);
+        }
+
+        function getWeeklyActivities() {
+            return activityLogs.filter(log => isWithinCurrentWeek(log.date));
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                mealPlan: currentMealPlan,
+                shoppingList: currentShoppingList,
+                customRecipes,
+                activityLogs,
+                workoutSchedule,
+                fitnessGoals
+            }));
+        }
+
+        function loadState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                customRecipes = Array.isArray(saved.customRecipes) ? saved.customRecipes : [];
+                currentMealPlan = Array.isArray(saved.mealPlan) ? saved.mealPlan : [];
+                currentShoppingList = saved.shoppingList && typeof saved.shoppingList === 'object' ? saved.shoppingList : {};
+                activityLogs = Array.isArray(saved.activityLogs) ? saved.activityLogs : [];
+                workoutSchedule = Array.isArray(saved.workoutSchedule) ? saved.workoutSchedule : [];
+                fitnessGoals = saved.fitnessGoals && typeof saved.fitnessGoals === 'object'
+                    ? { weeklyBurnGoal: Number(saved.fitnessGoals.weeklyBurnGoal) || 1200 }
+                    : { weeklyBurnGoal: 1200 };
+                normalizeState();
+            } catch (err) {
+                customRecipes = [];
+                currentMealPlan = [];
+                currentShoppingList = {};
+                activityLogs = [];
+                workoutSchedule = [];
+                fitnessGoals = { weeklyBurnGoal: 1200 };
+            }
+        }
+
+        function normalizeState() {
+            const validMeals = getAllMeals();
+            const validIds = new Set(validMeals.map(meal => meal.id));
+            currentMealPlan = currentMealPlan
+                .filter(entry => entry && entry.meal && validIds.has(entry.meal.id))
+                .map(entry => ({
+                    meal: validMeals.find(m => m.id === entry.meal.id) || entry.meal,
+                    frequency: Math.max(1, parseInt(entry.frequency || 1, 10))
+                }));
+        }
+
+        function getAllMeals() {
+            return [...MEALS_DATABASE, ...customRecipes];
+        }
+
+        function formatQuantity(value) {
+            const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.00$/, '');
+        }
+
+        // Initialize meal system
+        function initializeMealSystem() {
+            loadState();
+            displayFilteredMeals();
+            updateMealPlanDisplay();
+            updateShoppingListDisplay();
+            updateCustomRecipeCount();
+            updateDashboardSummary();
+            updateProgressDisplay();
+            initializeManualMealForm();
+            resetManualMealForm();
+            initializeFitnessInputs();
+        }
+
+        function initializeFitnessInputs() {
+            const today = getTodayIso();
+            const activityDate = document.getElementById('activity-date');
+            const workoutDate = document.getElementById('workout-date');
+            const goalInput = document.getElementById('goal-calories');
+            if (activityDate) activityDate.value = today;
+            if (workoutDate) workoutDate.value = today;
+            if (goalInput) goalInput.value = fitnessGoals.weeklyBurnGoal;
+            renderActivityList();
+            renderWorkoutCalendar();
+        }
+
+        function initializeManualMealForm() {
+            const list = document.getElementById('manual-ingredients-list');
+            if (!list || list.children.length) return;
+            addManualIngredientRow('Flour', 2, 'cups', 'pantry');
+            addManualIngredientRow('Tomato sauce', 2, 'cups', 'pantry');
+        }
+
+        function addManualIngredientRow(name = '', quantity = '', unit = '', category = 'other') {
+            const list = document.getElementById('manual-ingredients-list');
+            if (!list) return;
+            const row = document.createElement('div');
+            row.style.display = 'grid';
+            row.style.gridTemplateColumns = '2fr 1fr 1fr 1fr auto';
+            row.style.gap = '8px';
+            row.innerHTML = `
+                <input type="text" class="input-field ingredient-name" placeholder="Ingredient" value="${name}" style="max-width: none; margin: 0; padding: 10px;">
+                <input type="number" min="0" step="0.1" class="input-field ingredient-qty" placeholder="Qty" value="${quantity}" style="max-width: none; margin: 0; padding: 10px;">
+                <input type="text" class="input-field ingredient-unit" placeholder="Unit" value="${unit}" style="max-width: none; margin: 0; padding: 10px;">
+                <select class="input-field ingredient-category" style="max-width: none; margin: 0; padding: 10px;">
+                    <option value="pantry" ${category === 'pantry' ? 'selected' : ''}>Pantry</option>
+                    <option value="vegetables" ${category === 'vegetables' ? 'selected' : ''}>Vegetables</option>
+                    <option value="fruits" ${category === 'fruits' ? 'selected' : ''}>Fruits</option>
+                    <option value="dairy" ${category === 'dairy' ? 'selected' : ''}>Dairy</option>
+                    <option value="meat" ${category === 'meat' ? 'selected' : ''}>Meat</option>
+                    <option value="seafood" ${category === 'seafood' ? 'selected' : ''}>Seafood</option>
+                    <option value="other" ${category === 'other' ? 'selected' : ''}>Other</option>
+                </select>
+                <button class="btn" type="button" style="background:#f1f3f5;" onclick="this.parentElement.remove()">✕</button>
+            `;
+            list.appendChild(row);
+        }
+
+        function guessCaloriesByName(name) {
+            const lower = name.toLowerCase();
+            if (lower.includes('lasagna')) return 450;
+            if (lower.includes('salad')) return 300;
+            if (lower.includes('soup')) return 280;
+            if (lower.includes('burger')) return 650;
+            return 400;
+        }
+
+        function mapOnlineCategory(sourceCategory) {
+            const text = (sourceCategory || '').toLowerCase();
+            if (text.includes('breakfast')) return 'breakfast';
+            if (text.includes('dessert') || text.includes('snack')) return 'snack';
+            if (text.includes('starter') || text.includes('side') || text.includes('vegetarian')) return 'lunch';
+            return 'dinner';
+        }
+
+        function saveManualMeal() {
+            const name = (document.getElementById('manual-meal-name').value || '').trim();
+            const portions = parseInt(document.getElementById('manual-portions').value || '1', 10);
+            const caloriesInput = parseInt(document.getElementById('manual-calories').value || '0', 10);
+            const category = document.getElementById('manual-category').value;
+            const icon = (document.getElementById('manual-icon').value || '').trim() || '🍽️';
+            const instructionsText = (document.getElementById('manual-instructions').value || '').trim();
+
+            if (!name) {
+                alert('Please enter a meal name.');
+                return;
+            }
+
+            const ingredients = [];
+            const rows = document.querySelectorAll('#manual-ingredients-list > div');
+            rows.forEach(row => {
+                const ingName = (row.querySelector('.ingredient-name').value || '').trim();
+                const ingQty = parseFloat(row.querySelector('.ingredient-qty').value || '0');
+                const ingUnit = (row.querySelector('.ingredient-unit').value || '').trim() || 'unit';
+                const ingCategory = row.querySelector('.ingredient-category').value || 'other';
+                if (ingName && ingQty > 0) {
+                    ingredients.push({ name: ingName, quantity: ingQty, unit: ingUnit, category: ingCategory });
+                }
+            });
+
+            if (!ingredients.length) {
+                alert('Please add at least one ingredient with quantity.');
+                return;
+            }
+
+            const instructions = instructionsText
+                .split('\n')
+                .map(step => step.trim())
+                .filter(Boolean);
+
+            if (!instructions.length) {
+                alert('Please add at least one instruction step.');
+                return;
+            }
+
+            const recipePayload = {
+                id: editingCustomRecipeId || nextCustomRecipeId(),
+                name,
+                category,
+                calories: caloriesInput > 0 ? caloriesInput : guessCaloriesByName(name),
+                servings: Math.max(1, portions || 1),
+                icon,
+                ingredients,
+                recipe: instructions,
+                isCustom: true
+            };
+
+            if (editingCustomRecipeId) {
+                customRecipes = customRecipes.map(recipe => recipe.id === editingCustomRecipeId ? recipePayload : recipe);
+                currentMealPlan = currentMealPlan.map(entry => entry.meal.id === editingCustomRecipeId
+                    ? { ...entry, meal: recipePayload }
+                    : entry);
+            } else {
+                customRecipes.push(recipePayload);
+            }
+
+            saveState();
+            updateCustomRecipeCount();
+            displayFilteredMeals();
+            resetManualMealForm();
+            switchScreen('menu');
+            alert(`${name} saved to menu.`);
+        }
+
+        function populateManualFormFromRecipe(recipe) {
+            document.getElementById('manual-meal-name').value = recipe.name || '';
+            document.getElementById('manual-portions').value = recipe.servings || 1;
+            document.getElementById('manual-calories').value = recipe.calories || '';
+            document.getElementById('manual-category').value = recipe.category || 'dinner';
+            document.getElementById('manual-icon').value = recipe.icon || '';
+            document.getElementById('manual-instructions').value = Array.isArray(recipe.recipe) ? recipe.recipe.join('\n') : '';
+
+            const list = document.getElementById('manual-ingredients-list');
+            if (list) list.innerHTML = '';
+            (recipe.ingredients || []).forEach(ing => {
+                addManualIngredientRow(ing.name, ing.quantity, ing.unit, ing.category || 'other');
+            });
+
+            const saveBtn = document.getElementById('manual-save-btn');
+            if (saveBtn) saveBtn.textContent = '💾 Update Meal';
+            const cancelBtn = document.getElementById('manual-cancel-btn');
+            if (cancelBtn) cancelBtn.style.display = 'block';
+        }
+
+        function resetManualMealForm() {
+            editingCustomRecipeId = null;
+            document.getElementById('manual-meal-name').value = '';
+            document.getElementById('manual-portions').value = '';
+            document.getElementById('manual-calories').value = '';
+            document.getElementById('manual-category').value = 'dinner';
+            document.getElementById('manual-icon').value = '';
+            document.getElementById('manual-instructions').value = '';
+            const list = document.getElementById('manual-ingredients-list');
+            if (list) list.innerHTML = '';
+            addManualIngredientRow('Flour', 2, 'cups', 'pantry');
+            const saveBtn = document.getElementById('manual-save-btn');
+            if (saveBtn) saveBtn.textContent = '💾 Save Meal to Menu';
+            const cancelBtn = document.getElementById('manual-cancel-btn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+        }
+
+        function cancelManualEdit() {
+            resetManualMealForm();
+            switchScreen('menu');
+        }
+
+        function startEditingCustomRecipe(recipeId) {
+            const recipe = customRecipes.find(item => item.id === recipeId);
+            if (!recipe) return;
+            editingCustomRecipeId = recipeId;
+            populateManualFormFromRecipe(recipe);
+            switchScreen('manual');
+        }
+
+        function deleteCustomRecipe(recipeId) {
+            const recipe = customRecipes.find(item => item.id === recipeId);
+            if (!recipe) return;
+            if (!confirm(`Delete ${recipe.name}?`)) return;
+
+            customRecipes = customRecipes.filter(item => item.id !== recipeId);
+            currentMealPlan = currentMealPlan.filter(entry => entry.meal.id !== recipeId);
+            saveState();
+            updateCustomRecipeCount();
+            updateMealPlanDisplay();
+            displayFilteredMeals();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function buildSearchTerms(query) {
+            const base = (query || '').trim().toLowerCase();
+            const terms = [base];
+
+            if (base.endsWith('es')) terms.push(base.slice(0, -2));
+            if (base.endsWith('s')) terms.push(base.slice(0, -1));
+
+            base.split(/\s+/).forEach(part => {
+                if (part.length > 2) {
+                    terms.push(part);
+                    if (part.endsWith('s')) terms.push(part.slice(0, -1));
+                }
+            });
+
+            return [...new Set(terms.filter(Boolean))];
+        }
+
+        function normalizeMealArray(raw) {
+            return Array.isArray(raw) ? raw : [];
+        }
+
+        function dedupeMeals(meals) {
+            const seen = new Set();
+            const out = [];
+            meals.forEach(meal => {
+                if (!meal || !meal.idMeal || seen.has(meal.idMeal)) return;
+                seen.add(meal.idMeal);
+                out.push(meal);
+            });
+            return out;
+        }
+
+        async function fetchMealsByName(term) {
+            const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`);
+            const data = await response.json();
+            return normalizeMealArray(data.meals);
+        }
+
+        async function fetchMealById(idMeal) {
+            const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${encodeURIComponent(idMeal)}`);
+            const data = await response.json();
+            const meals = normalizeMealArray(data.meals);
+            return meals[0] || null;
+        }
+
+        async function fetchMealsByIngredient(term, maxMeals = 5) {
+            const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(term)}`);
+            const data = await response.json();
+            const lightMeals = normalizeMealArray(data.meals).slice(0, maxMeals);
+            const details = await Promise.all(lightMeals.map(item => fetchMealById(item.idMeal)));
+            return details.filter(Boolean);
+        }
+
+        function prefillManualFromSearch(term) {
+            resetManualMealForm();
+            document.getElementById('manual-meal-name').value = term;
+            document.getElementById('manual-calories').value = guessCaloriesByName(term);
+            switchScreen('manual');
+            showAuthMessage('');
+            const nameInput = document.getElementById('manual-meal-name');
+            if (nameInput) nameInput.focus();
+        }
+
+        async function searchOnlineRecipes() {
+            const query = (document.getElementById('online-recipe-query').value || '').trim();
+            const resultsEl = document.getElementById('online-recipe-results');
+            if (!resultsEl) return;
+
+            if (!query) {
+                resultsEl.innerHTML = '<div style="font-size:13px;color:#666;">Type a recipe name first.</div>';
+                return;
+            }
+
+            resultsEl.innerHTML = '<div style="font-size:13px;color:#666;">Searching...</div>';
+
+            try {
+                const terms = buildSearchTerms(query);
+                let meals = [];
+                let searchMode = 'name';
+
+                for (const term of terms) {
+                    const found = await fetchMealsByName(term);
+                    if (found.length) {
+                        meals = dedupeMeals([...meals, ...found]);
+                    }
+                    if (meals.length >= 5) break;
+                }
+
+                if (!meals.length) {
+                    searchMode = 'ingredient';
+                    for (const term of terms) {
+                        const found = await fetchMealsByIngredient(term, 3);
+                        if (found.length) {
+                            meals = dedupeMeals([...meals, ...found]);
+                        }
+                        if (meals.length >= 5) break;
+                    }
+                }
+
+                meals = meals.slice(0, 5);
+                onlineSearchCache = meals;
+
+                if (!meals.length) {
+                    const safeQuery = escapeHtml(query);
+                    resultsEl.innerHTML = `
+                        <div style="font-size:13px;color:#666; margin-bottom: 8px;">No online recipes found for "${safeQuery}".</div>
+                        <button class="btn btn-primary" style="width: 100%;" onclick='prefillManualFromSearch(${JSON.stringify(query)})'>Create "${safeQuery}" manually</button>
+                    `;
+                    return;
+                }
+
+                const modeBadge = searchMode === 'ingredient'
+                    ? '<div style="font-size:12px;color:#666;margin-bottom:8px;">Showing close matches by ingredient.</div>'
+                    : '';
+
+                resultsEl.innerHTML = `${modeBadge}${meals.map((meal, index) => `
+                    <div style="padding:10px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;display:flex;justify-content:space-between;gap:8px;align-items:center;">
+                        <div>
+                            <div style="font-weight:600;">${meal.strMeal}</div>
+                            <div style="font-size:12px;color:#666;">${meal.strCategory || 'Recipe'} • ${meal.strArea || 'Global'}</div>
+                        </div>
+                        <button class="btn btn-primary" style="flex:none;padding:8px 12px;" onclick="importOnlineRecipe(${index})">Import</button>
+                    </div>
+                `).join('')}`;
+            } catch (error) {
+                const safeQuery = escapeHtml(query);
+                resultsEl.innerHTML = `
+                    <div style="font-size:13px;color:#b02a37; margin-bottom:8px;">Online search failed. You can still add recipe manually.</div>
+                    <button class="btn btn-outline" style="width: 100%;" onclick='prefillManualFromSearch(${JSON.stringify(query)})'>Create "${safeQuery}" manually</button>
+                `;
+            }
+        }
+
+        function importOnlineRecipe(index) {
+            const meal = onlineSearchCache[index];
+            if (!meal) return;
+
+            const ingredients = [];
+            for (let i = 1; i <= 20; i += 1) {
+                const name = (meal[`strIngredient${i}`] || '').trim();
+                const qty = (meal[`strMeasure${i}`] || '').trim();
+                if (name) {
+                    ingredients.push({
+                        name,
+                        quantity: 1,
+                        unit: qty || 'portion',
+                        category: 'other'
+                    });
+                }
+            }
+
+            const steps = (meal.strInstructions || '')
+                .split(/\r?\n|\./)
+                .map(s => s.trim())
+                .filter(Boolean)
+                .slice(0, 10);
+
+            customRecipes.push({
+                id: nextCustomRecipeId(),
+                name: meal.strMeal,
+                category: mapOnlineCategory(meal.strCategory),
+                calories: guessCaloriesByName(meal.strMeal),
+                servings: 4,
+                icon: '🍝',
+                ingredients,
+                recipe: steps.length ? steps : ['Prepare ingredients', 'Cook based on recipe style', 'Serve'],
+                isCustom: true
+            });
+
+            saveState();
+            updateCustomRecipeCount();
+            displayFilteredMeals();
+            alert(`${meal.strMeal} imported into your menu.`);
+            switchScreen('menu');
+        }
+
+        function displayFilteredMeals() {
+            const meals = getAllMeals();
+            const filteredMeals = currentFilter === 'all'
+                ? meals
+                : meals.filter(meal => meal.category === currentFilter);
+            displayMeals(filteredMeals);
+        }
+
+        // Display meals based on current filter
+        function displayMeals(meals) {
+            const mealsGrid = document.getElementById('meals-grid');
+            if (!mealsGrid) return;
+
+            mealsGrid.innerHTML = '';
+
+            if (!meals.length) {
+                mealsGrid.innerHTML = '<div class="card"><p style="color: #666; text-align: center;">No meals found for this category.</p></div>';
+                return;
+            }
+
+            meals.forEach(meal => {
+                mealsGrid.appendChild(createMealCard(meal));
+            });
+        }
+
+        // Create meal card element
+        function createMealCard(meal) {
+            const card = document.createElement('div');
+            card.className = 'meal-card';
+            card.innerHTML = `
+                <div class="meal-image">${meal.icon || '🍽️'}</div>
+                <div class="meal-info">
+                    <div class="meal-details">
+                        <div class="meal-name">${meal.name}</div>
+                        <div class="meal-category">${meal.category}${meal.isCustom ? ' • custom' : ''}</div>
+                        <div class="meal-calories">${meal.calories} calories</div>
+                    </div>
+                    <button class="add-meal-btn" onclick="openMealModal(${meal.id})">+ Add</button>
+                </div>
+            `;
+            return card;
+        }
+
+        // Filter meals by category
+        function filterMeals(category) {
+            currentFilter = category;
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const isActive = btn.getAttribute('data-filter') === category;
+                btn.classList.toggle('active', isActive);
+            });
+
+            displayFilteredMeals();
+        }
+
+        // Open meal details modal
+        function openMealModal(mealId) {
+            const meal = getAllMeals().find(m => m.id === mealId);
+            if (!meal) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'meal-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>${meal.icon || '🍽️'} ${meal.name}</h2>
+                        <button class="close-modal" onclick="closeMealModal()">&times;</button>
+                    </div>
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <span style="background: #4A90E2; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600;">
+                            ${meal.calories} calories
+                        </span>
+                    </div>
+                    ${meal.servings ? `<div style="font-size: 13px; color: #666; margin-bottom: 12px;">Servings: ${meal.servings}</div>` : ''}
+                    <div class="ingredient-list">
+                        <h3>🛒 Ingredients:</h3>
+                        ${meal.ingredients.map(ing => `
+                            <div class="ingredient-item">
+                                <span class="item-name">${ing.name}</span>
+                                <span class="item-quantity">${formatQuantity(ing.quantity)} ${ing.unit}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="recipe-steps">
+                        <h3>👩‍🍳 Recipe:</h3>
+                        ${meal.recipe.map(step => `<div class="recipe-step">${step}</div>`).join('')}
+                    </div>
+                    <div class="frequency-selector">
+                        <label>How many times this week?</label>
+                        <input type="number" class="frequency-input" id="meal-frequency" value="1" min="1" max="14">
+                        <span>times</span>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; padding: 16px; margin-top: 16px;"
+                            onclick="addMealToPlan(${meal.id})">
+                        📅 Add to Meal Plan
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function closeMealModal() {
+            const modal = document.querySelector('.meal-modal');
+            if (modal) modal.remove();
+        }
+
+        function addMealToPlan(mealId) {
+            const meal = getAllMeals().find(m => m.id === mealId);
+            const frequency = Math.max(1, parseInt(document.getElementById('meal-frequency').value || '1', 10));
+            if (!meal) return;
+
+            const existingIndex = currentMealPlan.findIndex(pm => pm.meal.id === mealId);
+            if (existingIndex >= 0) {
+                currentMealPlan[existingIndex].frequency = frequency;
+            } else {
+                currentMealPlan.push({ meal, frequency });
+            }
+
+            saveState();
+            updateMealPlanDisplay();
+            closeMealModal();
+            alert(`${meal.name} added to your meal plan (${frequency}x per week)!`);
+        }
+
+        function updateMealPlanDisplay() {
+            const planList = document.getElementById('planned-meals-list');
+            const totalCalories = document.getElementById('planned-calories');
+            const totalMeals = document.getElementById('planned-meals');
+            if (!planList || !totalCalories || !totalMeals) return;
+
+            if (!currentMealPlan.length) {
+                planList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No meals planned yet. Browse the menu to add meals!</p>';
+                totalCalories.textContent = '0';
+                totalMeals.textContent = '0';
+                updateDashboardSummary();
+                return;
+            }
+
+            let weeklyCalories = 0;
+            let weeklyMealCount = 0;
+
+            planList.innerHTML = currentMealPlan.map(plannedMeal => {
+                const totalMealCalories = plannedMeal.meal.calories * plannedMeal.frequency;
+                weeklyCalories += totalMealCalories;
+                weeklyMealCount += plannedMeal.frequency;
+
+                return `
+                    <div class="planned-meal-item">
+                        <div class="planned-meal-info">
+                            <div class="planned-meal-name">${plannedMeal.meal.icon || '🍽️'} ${plannedMeal.meal.name}</div>
+                            <div class="planned-meal-details">
+                                ${plannedMeal.frequency}x per week • ${totalMealCalories} total calories
+                            </div>
+                        </div>
+                        <button class="remove-meal-btn" onclick="removeMealFromPlan(${plannedMeal.meal.id})">
+                            Remove
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            totalCalories.textContent = weeklyCalories.toLocaleString();
+            totalMeals.textContent = weeklyMealCount;
+            updateDashboardSummary();
+        }
+
+        function removeMealFromPlan(mealId) {
+            currentMealPlan = currentMealPlan.filter(pm => pm.meal.id !== mealId);
+            saveState();
+            updateMealPlanDisplay();
+        }
+
+        function clearMealPlan() {
+            if (!confirm('Are you sure you want to clear your entire meal plan?')) return;
+            currentMealPlan = [];
+            saveState();
+            updateMealPlanDisplay();
+            alert('Meal plan cleared successfully!');
+        }
+
+        function addIngredientToShoppingList(name, quantity, unit, category) {
+            if (!currentShoppingList[category]) {
+                currentShoppingList[category] = {};
+            }
+
+            if (!currentShoppingList[category][name]) {
+                currentShoppingList[category][name] = { quantity: 0, unit };
+            }
+
+            currentShoppingList[category][name].quantity += quantity;
+            currentShoppingList[category][name].unit = unit;
+        }
+
+        function generateShoppingList() {
+            if (!currentMealPlan.length) {
+                alert('Please add meals to your plan first!');
+                return;
+            }
+
+            currentShoppingList = {};
+
+            currentMealPlan.forEach(plannedMeal => {
+                plannedMeal.meal.ingredients.forEach(ingredient => {
+                    addIngredientToShoppingList(
+                        ingredient.name,
+                        ingredient.quantity * plannedMeal.frequency,
+                        ingredient.unit,
+                        ingredient.category || 'other'
+                    );
+                });
+            });
+
+            saveState();
+            updateShoppingListDisplay();
+            switchScreen('shopping');
+            alert('Shopping list generated!');
+        }
+
+        function addManualShoppingItem() {
+            const nameInput = document.getElementById('manual-item-name');
+            const qtyInput = document.getElementById('manual-item-qty');
+            const unitInput = document.getElementById('manual-item-unit');
+            const categoryInput = document.getElementById('manual-item-category');
+
+            const name = (nameInput.value || '').trim();
+            const quantity = parseFloat(qtyInput.value || '0');
+            const unit = (unitInput.value || '').trim() || 'unit';
+            const category = categoryInput.value || 'other';
+
+            if (!name) {
+                alert('Please enter an ingredient name.');
+                return;
+            }
+
+            if (!quantity || quantity <= 0) {
+                alert('Please enter a valid quantity greater than 0.');
+                return;
+            }
+
+            addIngredientToShoppingList(name, quantity, unit, category);
+            saveState();
+            updateShoppingListDisplay();
+
+            nameInput.value = '';
+            qtyInput.value = '';
+            unitInput.value = '';
+        }
+
+        function updateShoppingListDisplay() {
+            const shoppingCategories = document.getElementById('shopping-categories');
+            if (!shoppingCategories) return;
+
+            const categoryIcons = {
+                meat: '🥩',
+                seafood: '🐟',
+                dairy: '🥛',
+                vegetables: '🥕',
+                fruits: '🍎',
+                pantry: '🏪',
+                other: '📦'
+            };
+
+            if (!Object.keys(currentShoppingList).length) {
+                shoppingCategories.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Generate your shopping list from your meal plan or add items manually.</p>';
+                return;
+            }
+
+            shoppingCategories.innerHTML = Object.entries(currentShoppingList).map(([category, items]) => `
+                <div class="shopping-category">
+                    <div class="category-title">
+                        ${categoryIcons[category] || '📦'} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    </div>
+                    ${Object.entries(items).map(([name, item]) => `
+                        <div class="shopping-item">
+                            <span class="item-name">${name}</span>
+                            <span class="item-quantity">${formatQuantity(item.quantity)} ${item.unit}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function clearShoppingList() {
+            if (!confirm('Are you sure you want to clear your shopping list?')) return;
+            currentShoppingList = {};
+            saveState();
+            updateShoppingListDisplay();
+        }
+
+        function nextCustomRecipeId() {
+            return getAllMeals().reduce((maxId, meal) => Math.max(maxId, meal.id), 0) + 1;
+        }
+
+        function openCustomRecipeModal() {
+            const modal = document.createElement('div');
+            modal.className = 'meal-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🧾 Add Custom Recipe</h2>
+                        <button class="close-modal" onclick="closeMealModal()">&times;</button>
+                    </div>
+                    <div style="display: grid; gap: 10px;">
+                        <input id="custom-name" class="input-field" style="max-width: none; margin: 0;" placeholder="Recipe name">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <select id="custom-category" class="input-field" style="max-width: none; margin: 0;">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                            <input id="custom-calories" type="number" min="1" class="input-field" style="max-width: none; margin: 0;" placeholder="Calories">
+                            <input id="custom-icon" class="input-field" style="max-width: none; margin: 0;" placeholder="Icon (optional)">
+                        </div>
+                        <label style="font-size: 13px; color: #666;">Ingredients, one per line: name|quantity|unit|category</label>
+                        <textarea id="custom-ingredients" style="min-height: 90px; border: 2px solid #E5E5E5; border-radius: 8px; padding: 10px; font-family: inherit;" placeholder="Chicken breast|200|g|meat&#10;Garlic|2|cloves|vegetables"></textarea>
+                        <label style="font-size: 13px; color: #666;">Recipe steps, one per line</label>
+                        <textarea id="custom-steps" style="min-height: 90px; border: 2px solid #E5E5E5; border-radius: 8px; padding: 10px; font-family: inherit;" placeholder="Season the chicken&#10;Cook in a pan until done"></textarea>
+                        <button class="btn btn-primary" onclick="saveCustomRecipe()">Save Recipe</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function saveCustomRecipe() {
+            const name = (document.getElementById('custom-name').value || '').trim();
+            const category = document.getElementById('custom-category').value;
+            const calories = parseInt(document.getElementById('custom-calories').value || '0', 10);
+            const icon = (document.getElementById('custom-icon').value || '').trim() || '🍽️';
+            const ingredientsText = (document.getElementById('custom-ingredients').value || '').trim();
+            const stepsText = (document.getElementById('custom-steps').value || '').trim();
+
+            if (!name || !calories) {
+                alert('Please enter at least recipe name and calories.');
+                return;
+            }
+
+            const ingredients = ingredientsText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean)
+                .map(line => {
+                    const parts = line.split('|').map(p => p.trim());
+                    return {
+                        name: parts[0] || 'Ingredient',
+                        quantity: Number(parts[1] || '1'),
+                        unit: parts[2] || 'unit',
+                        category: parts[3] || 'other'
+                    };
+                });
+
+            const recipe = stepsText
+                .split('\n')
+                .map(step => step.trim())
+                .filter(Boolean);
+
+            if (!ingredients.length || !recipe.length) {
+                alert('Please provide at least one ingredient and one recipe step.');
+                return;
+            }
+
+            customRecipes.push({
+                id: nextCustomRecipeId(),
+                name,
+                category,
+                calories,
+                icon,
+                ingredients,
+                recipe,
+                isCustom: true
+            });
+
+            saveState();
+            updateCustomRecipeCount();
+            displayFilteredMeals();
+            closeMealModal();
+            alert('Custom recipe saved!');
+        }
+
+        function updateCustomRecipeCount() {
+            const countEl = document.getElementById('custom-recipe-count');
+            if (countEl) {
+                countEl.textContent = `${customRecipes.length} custom recipe${customRecipes.length === 1 ? '' : 's'}`;
+            }
+            renderCustomRecipeManager();
+        }
+
+        function renderCustomRecipeManager() {
+            const container = document.getElementById('custom-recipe-manager');
+            if (!container) return;
+
+            if (!customRecipes.length) {
+                container.innerHTML = '<div style="font-size: 13px; color: #666;">No custom recipes yet.</div>';
+                return;
+            }
+
+            container.innerHTML = customRecipes.map(recipe => `
+                <div style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 8px; display: flex; justify-content: space-between; gap: 8px; align-items: center;">
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${recipe.icon || '🍽️'} ${recipe.name}</div>
+                        <div style="font-size: 12px; color: #666;">${recipe.category} • ${recipe.calories} kcal</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-outline" style="padding: 6px 10px; flex: none;" onclick="startEditingCustomRecipe(${recipe.id})">Edit</button>
+                        <button class="btn" style="padding: 6px 10px; flex: none; background: #fde2e1; color: #b42318;" onclick="deleteCustomRecipe(${recipe.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveCalorieGoal() {
+            const goalInput = document.getElementById('goal-calories');
+            const goal = parseInt(goalInput && goalInput.value ? goalInput.value : '0', 10);
+            if (!goal || goal < 500) {
+                alert('Please enter a weekly goal of at least 500 kcal.');
+                return;
+            }
+
+            fitnessGoals.weeklyBurnGoal = goal;
+            saveState();
+            updateDashboardSummary();
+            updateProgressDisplay();
+        }
+
+        function addActivityLog() {
+            const name = (document.getElementById('activity-name').value || '').trim();
+            const calories = parseFloat(document.getElementById('activity-calories').value || '0');
+            const date = (document.getElementById('activity-date').value || getTodayIso()).trim();
+
+            if (!name || !calories || calories <= 0) {
+                alert('Please enter activity name and calories burned.');
+                return;
+            }
+
+            activityLogs.unshift({
+                id: Date.now(),
+                name,
+                calories,
+                date
+            });
+
+            saveState();
+            renderActivityList();
+            updateDashboardSummary();
+            updateProgressDisplay();
+
+            document.getElementById('activity-name').value = '';
+            document.getElementById('activity-calories').value = '';
+        }
+
+        function removeActivityLog(logId) {
+            activityLogs = activityLogs.filter(log => log.id !== logId);
+            saveState();
+            renderActivityList();
+            updateDashboardSummary();
+            updateProgressDisplay();
+        }
+
+        function renderActivityList() {
+            const list = document.getElementById('activity-log-list');
+            if (!list) return;
+
+            const weeklyLogs = getWeeklyActivities().slice(0, 6);
+            if (!weeklyLogs.length) {
+                list.innerHTML = '<div style="font-size: 13px; color: #666;">No activities logged this week yet.</div>';
+                return;
+            }
+
+            list.innerHTML = weeklyLogs.map(log => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 8px;">
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600;">${log.name}</div>
+                        <div style="font-size: 12px; color: #666;">${log.date}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 600; color: #1f5ea8;">${formatQuantity(log.calories)} kcal</span>
+                        <button class="btn" style="flex:none; padding:4px 8px; background:#fde2e1; color:#b42318;" onclick="removeActivityLog(${log.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addWorkoutSchedule() {
+            const name = (document.getElementById('workout-name').value || '').trim();
+            const date = (document.getElementById('workout-date').value || '').trim();
+
+            if (!name || !date) {
+                alert('Please enter workout name and date.');
+                return;
+            }
+
+            workoutSchedule.push({ id: Date.now(), name, date });
+            workoutSchedule.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveState();
+            renderWorkoutCalendar();
+
+            document.getElementById('workout-name').value = '';
+        }
+
+        function removeWorkoutSchedule(workoutId) {
+            workoutSchedule = workoutSchedule.filter(workout => workout.id !== workoutId);
+            saveState();
+            renderWorkoutCalendar();
+            updateDashboardSummary();
+            updateProgressDisplay();
+        }
+
+        function getNextWorkout() {
+            const today = toDateOnly(getTodayIso());
+            const upcoming = workoutSchedule
+                .filter(item => toDateOnly(item.date) >= today)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            return upcoming[0] || null;
+        }
+
+        function renderWorkoutCalendar() {
+            const list = document.getElementById('workout-calendar-list');
+            const banner = document.getElementById('next-workout-banner');
+            if (!list || !banner) return;
+
+            const start = getStartOfWeek();
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            const next = getNextWorkout();
+            banner.textContent = next
+                ? `Next workout is ${next.name} on ${next.date}`
+                : 'Next workout is: not scheduled';
+
+            list.innerHTML = days.map((day, index) => {
+                const date = new Date(start);
+                date.setDate(start.getDate() + index);
+                const iso = date.toISOString().slice(0, 10);
+                const workouts = workoutSchedule.filter(item => item.date === iso);
+                return `
+                    <div style="border: 1px solid #eee; border-radius: 8px; padding: 8px; background: ${workouts.length ? '#fff8f2' : '#fff'};">
+                        <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">${day} • ${iso.slice(5)}</div>
+                        ${workouts.length ? workouts.map(item => `
+                            <div style="display:flex; justify-content: space-between; align-items:center; gap:8px; font-size:12px; margin-bottom:4px;">
+                                <span>${item.name}</span>
+                                <button class="btn" style="flex:none; padding:2px 6px; background:#fde2e1; color:#b42318;" onclick="removeWorkoutSchedule(${item.id})">✕</button>
+                            </div>
+                        `).join('') : '<span style="font-size:12px;color:#999;">No workout</span>'}
+                    </div>
+                `;
+            }).join('');
+
+            const nextTitle = document.getElementById('dashboard-next-workout');
+            const nextDetail = document.getElementById('dashboard-next-workout-time');
+            if (nextTitle) nextTitle.textContent = next ? next.name : 'None';
+            if (nextDetail) nextDetail.textContent = next ? next.date : 'Add one below';
+        }
+
+        function updateDashboardSummary() {
+            const consumed = getWeeklyConsumedCalories();
+            const burned = getWeeklyBurnedCalories();
+            const balance = burned - consumed;
+            const goal = fitnessGoals.weeklyBurnGoal || 1200;
+
+            const calorieLine = document.getElementById('dashboard-calorie-line');
+            const balanceLine = document.getElementById('dashboard-balance-line');
+            const activityCount = document.getElementById('dashboard-activity-count');
+            const goalStatus = document.getElementById('goal-status');
+            const circle = document.getElementById('dashboard-balance-circle');
+
+            if (calorieLine) calorieLine.textContent = `In: ${consumed.toLocaleString()} kcal   Out: ${burned.toLocaleString()} kcal`;
+            if (balanceLine) balanceLine.textContent = `Balance: ${balance >= 0 ? '+' : ''}${balance.toLocaleString()} kcal`;
+            if (activityCount) activityCount.textContent = String(getWeeklyActivities().length);
+
+            if (goalStatus) {
+                const progressPercent = Math.round(Math.min((burned / goal) * 100, 999));
+                goalStatus.textContent = `Burn goal: ${goal.toLocaleString()} kcal • Progress: ${progressPercent}%`;
+            }
+
+            if (circle) {
+                const total = Math.max(consumed + burned, 1);
+                const angle = Math.round((burned / total) * 360);
+                circle.style.background = `conic-gradient(#4A90E2 0deg ${angle}deg, #E5E5E5 ${angle}deg 360deg)`;
+            }
+
+            updateProgressDisplay();
+            renderWorkoutCalendar();
+        }
+
+        function updateProgressDisplay() {
+            const consumed = getWeeklyConsumedCalories();
+            const burned = getWeeklyBurnedCalories();
+            const balance = burned - consumed;
+            const workoutsCompleted = getWeeklyActivities().length;
+            const workoutsPlanned = workoutSchedule.filter(item => isWithinCurrentWeek(item.date)).length;
+
+            const summary = document.getElementById('progress-calorie-summary');
+            const bars = document.getElementById('progress-weekly-bars');
+            const workoutsSummary = document.getElementById('progress-workouts-summary');
+            const motivation = document.getElementById('progress-motivation');
+            if (!summary || !bars || !workoutsSummary || !motivation) return;
+
+            summary.textContent = `Consumed: ${consumed.toLocaleString()} kcal • Burned: ${burned.toLocaleString()} kcal • Net: ${balance >= 0 ? '+' : ''}${balance.toLocaleString()} kcal`;
+
+            const weeklyDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+            const start = getStartOfWeek();
+            const dailyBurn = new Array(7).fill(0);
+
+            getWeeklyActivities().forEach(log => {
+                const diffDays = Math.floor((toDateOnly(log.date) - start) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays < 7) {
+                    dailyBurn[diffDays] += parseFloat(log.calories) || 0;
+                }
+            });
+
+            const dailyConsumedEstimate = consumed / 7;
+            const maxValue = Math.max(...dailyBurn, dailyConsumedEstimate, 1);
+
+            bars.innerHTML = weeklyDays.map((day, idx) => {
+                const burnHeight = Math.max(8, Math.round((dailyBurn[idx] / maxValue) * 80));
+                const consumeHeight = Math.max(8, Math.round((dailyConsumedEstimate / maxValue) * 80));
+                return `
+                    <div style="text-align:center; width: 30px;">
+                        <div style="display:flex; justify-content:center; align-items:flex-end; gap:3px; height: 88px; margin-bottom:4px;">
+                            <div style="width:10px;height:${burnHeight}px;background:#60A5FA;border-radius:4px;"></div>
+                            <div style="width:10px;height:${consumeHeight}px;background:#d1d5db;border-radius:4px;"></div>
+                        </div>
+                        <div style="font-size:12px;">${day}</div>
+                    </div>
+                `;
+            }).join('');
+
+            workoutsSummary.innerHTML = `
+                <div style="text-align:center; padding:12px; background:#f8f9fa; border-radius:8px;">
+                    <div style="font-size:18px; font-weight:bold; color:#28a745;">${workoutsCompleted}</div>
+                    <div style="font-size:12px; color:#666;">Workouts Completed</div>
+                </div>
+                <div style="text-align:center; padding:12px; background:#f8f9fa; border-radius:8px;">
+                    <div style="font-size:18px; font-weight:bold; color:#007bff;">${workoutsPlanned}</div>
+                    <div style="font-size:12px; color:#666;">Workouts Planned</div>
+                </div>
+            `;
+
+            if (balance >= 0 && workoutsCompleted >= Math.max(1, workoutsPlanned / 2)) {
+                motivation.textContent = 'You are absolutely killing it this week. Keep this momentum going.';
+            } else if (workoutsCompleted > 0) {
+                motivation.textContent = 'Great consistency. One more push and this week is yours.';
+            } else {
+                motivation.textContent = 'New week, fresh start. Log one activity and build the streak.';
+            }
+        }
+
+        // Load demo meal plan
+        function loadDemoMealPlan() {
+            currentMealPlan = [
+                { meal: getAllMeals().find(m => m.id === 1), frequency: 2 },
+                { meal: getAllMeals().find(m => m.id === 8), frequency: 3 },
+                { meal: getAllMeals().find(m => m.id === 14), frequency: 2 },
+                { meal: getAllMeals().find(m => m.id === 21), frequency: 4 },
+                { meal: getAllMeals().find(m => m.id === 10), frequency: 2 }
+            ].filter(entry => entry.meal);
+
+            saveState();
+            updateMealPlanDisplay();
+            alert('Demo meal plan loaded!');
+        }
+
+        function loadDemoAndGenerateList() {
+            loadDemoMealPlan();
+            generateShoppingList();
+        }
+    </script>
+</body>
+</html>

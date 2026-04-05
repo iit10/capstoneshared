@@ -25,6 +25,21 @@ Then open:
 - `http://localhost:5500/snapcal_working.html`
 - or `http://localhost:5500/snapcal_preview.html`
 
+## Android Quick Start
+
+This project can also run as a simple Android WebView wrapper.
+
+1. Open the project in Android Studio.
+2. Let Gradle sync finish.
+3. Run the `app` module on an emulator or Android phone.
+4. The app loads `snapcal_working.html` from `app/src/main/assets`.
+
+### Notes for Android
+
+- The app needs internet access for online recipe search and external images.
+- User login and app state are still stored locally in the device browser/webview storage.
+- If the WebView is blank, confirm that `snapcal_working.html` exists in `app/src/main/assets`.
+
 ## Current Features
 
 - Local sign up/login flow (prototype auth)
